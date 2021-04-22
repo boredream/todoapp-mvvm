@@ -18,45 +18,54 @@ package com.example.android.architecture.blueprints.todoapp.tasks;
 
 import android.content.Intent;
 import android.os.Bundle;
+import android.view.Menu;
+import android.view.MenuInflater;
 import android.view.MenuItem;
-
-import com.example.android.architecture.blueprints.todoapp.Event;
-import com.example.android.architecture.blueprints.todoapp.R;
-import com.example.android.architecture.blueprints.todoapp.ViewModelFactory;
-import com.example.android.architecture.blueprints.todoapp.addedittask.AddEditTaskActivity;
-import com.example.android.architecture.blueprints.todoapp.statistics.StatisticsActivity;
-import com.example.android.architecture.blueprints.todoapp.taskdetail.TaskDetailActivity;
-import com.example.android.architecture.blueprints.todoapp.util.ActivityUtils;
-import com.google.android.material.navigation.NavigationView;
+import android.widget.ListView;
+import android.widget.Toast;
 
 import androidx.appcompat.app.ActionBar;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.appcompat.widget.PopupMenu;
 import androidx.appcompat.widget.Toolbar;
-import androidx.core.view.GravityCompat;
-import androidx.drawerlayout.widget.DrawerLayout;
+import androidx.core.content.ContextCompat;
+import androidx.databinding.DataBindingUtil;
 import androidx.fragment.app.FragmentActivity;
 import androidx.lifecycle.Observer;
 import androidx.lifecycle.ViewModelProviders;
 
+import com.example.android.architecture.blueprints.todoapp.Event;
+import com.example.android.architecture.blueprints.todoapp.R;
+import com.example.android.architecture.blueprints.todoapp.ScrollChildSwipeRefreshLayout;
+import com.example.android.architecture.blueprints.todoapp.ViewModelFactory;
+import com.example.android.architecture.blueprints.todoapp.addedittask.AddEditTaskActivity;
+import com.example.android.architecture.blueprints.todoapp.data.Task;
+import com.example.android.architecture.blueprints.todoapp.databinding.TasksActBinding;
+import com.example.android.architecture.blueprints.todoapp.taskdetail.TaskDetailActivity;
+
+import java.util.ArrayList;
+import java.util.List;
+
 
 public class TasksActivity extends AppCompatActivity implements TaskItemNavigator, TasksNavigator {
 
-    private DrawerLayout mDrawerLayout;
-
+    private TasksActBinding mBinding;
     private TasksViewModel mViewModel;
+    private TasksAdapter mListAdapter;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.tasks_act);
+
+        mBinding = DataBindingUtil.setContentView(this, R.layout.tasks_act);
+        mViewModel = obtainViewModel(this);
+        mBinding.setLifecycleOwner(this);
+        mBinding.setViewModel(mViewModel);
 
         setupToolbar();
-
-        setupNavigationDrawer();
-
-        setupViewFragment();
-
-        mViewModel = obtainViewModel(this);
+        setupSnackbar();
+        setupListAdapter();
+        setupRefreshLayout();
 
         // Subscribe to "open task" event
         mViewModel.getOpenTaskEvent().observe(this, new Observer<Event<String>>() {
@@ -79,80 +88,96 @@ public class TasksActivity extends AppCompatActivity implements TaskItemNavigato
                 }
             }
         });
+
+        mViewModel.start();
     }
 
     public static TasksViewModel obtainViewModel(FragmentActivity activity) {
         // Use a Factory to inject dependencies into the ViewModel
         ViewModelFactory factory = ViewModelFactory.getInstance(activity.getApplication());
-
-        TasksViewModel viewModel =
-                ViewModelProviders.of(activity, factory).get(TasksViewModel.class);
-
-        return viewModel;
-    }
-
-    private void setupViewFragment() {
-        TasksFragment tasksFragment =
-                (TasksFragment) getSupportFragmentManager().findFragmentById(R.id.contentFrame);
-        if (tasksFragment == null) {
-            // Create the fragment
-            tasksFragment = TasksFragment.newInstance();
-            ActivityUtils.replaceFragmentInActivity(
-                    getSupportFragmentManager(), tasksFragment, R.id.contentFrame);
-        }
+        return ViewModelProviders.of(activity, factory).get(TasksViewModel.class);
     }
 
     private void setupToolbar() {
-        Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
+        Toolbar toolbar = findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
-        ActionBar ab = getSupportActionBar();
-        ab.setHomeAsUpIndicator(R.drawable.ic_menu);
-        ab.setDisplayHomeAsUpEnabled(true);
+    }
+    
+    private void setupSnackbar() {
+        mViewModel.getSnackbarMessage().observe(this, new Observer<Event<Integer>>() {
+            @Override
+            public void onChanged(Event<Integer> event) {
+                Integer msg = event.getContentIfNotHandled();
+                if (msg != null) {
+                    Toast.makeText(TasksActivity.this, getString(msg), Toast.LENGTH_SHORT).show();
+                }
+            }
+        });
     }
 
-    private void setupNavigationDrawer() {
-        mDrawerLayout = (DrawerLayout) findViewById(R.id.drawer_layout);
-        mDrawerLayout.setStatusBarBackground(R.color.colorPrimaryDark);
-        NavigationView navigationView = (NavigationView) findViewById(R.id.nav_view);
-        if (navigationView != null) {
-            setupDrawerContent(navigationView);
-        }
+    private void setupListAdapter() {
+        ListView listView = mBinding.tasksList;
+        mListAdapter = new TasksAdapter(new ArrayList<Task>(0), mViewModel, this);
+        listView.setAdapter(mListAdapter);
+    }
+
+    private void setupRefreshLayout() {
+        ListView listView = mBinding.tasksList;
+        final ScrollChildSwipeRefreshLayout swipeRefreshLayout = mBinding.refreshLayout;
+        swipeRefreshLayout.setColorSchemeColors(
+                ContextCompat.getColor(this, R.color.colorPrimary),
+                ContextCompat.getColor(this, R.color.colorAccent),
+                ContextCompat.getColor(this, R.color.colorPrimaryDark)
+        );
+        // Set the scrolling view in the custom SwipeRefreshLayout.
+        swipeRefreshLayout.setScrollUpChild(listView);
+    }
+
+    @Override
+    public boolean onCreateOptionsMenu(Menu menu) {
+        getMenuInflater().inflate(R.menu.tasks_fragment_menu, menu);
+        return true;
     }
 
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
         switch (item.getItemId()) {
-            case android.R.id.home:
-                // Open the navigation drawer when the home icon is selected from the toolbar.
-                mDrawerLayout.openDrawer(GravityCompat.START);
-                return true;
+            case R.id.menu_clear:
+                mViewModel.clearCompletedTasks();
+                break;
+            case R.id.menu_filter:
+                showFilteringPopUpMenu();
+                break;
+            case R.id.menu_refresh:
+                mViewModel.loadTasks(true);
+                break;
         }
-        return super.onOptionsItemSelected(item);
+        return true;
     }
 
-    private void setupDrawerContent(NavigationView navigationView) {
-        navigationView.setNavigationItemSelectedListener(
-                new NavigationView.OnNavigationItemSelectedListener() {
-                    @Override
-                    public boolean onNavigationItemSelected(MenuItem menuItem) {
-                        switch (menuItem.getItemId()) {
-                            case R.id.list_navigation_menu_item:
-                                // Do nothing, we're already on that screen
-                                break;
-                            case R.id.statistics_navigation_menu_item:
-                                Intent intent =
-                                        new Intent(TasksActivity.this, StatisticsActivity.class);
-                                startActivity(intent);
-                                break;
-                            default:
-                                break;
-                        }
-                        // Close the navigation drawer when an item is selected.
-                        menuItem.setChecked(true);
-                        mDrawerLayout.closeDrawers();
-                        return true;
-                    }
-                });
+    private void showFilteringPopUpMenu() {
+        PopupMenu popup = new PopupMenu(this, findViewById(R.id.menu_filter));
+        popup.getMenuInflater().inflate(R.menu.filter_tasks, popup.getMenu());
+
+        popup.setOnMenuItemClickListener(new PopupMenu.OnMenuItemClickListener() {
+            public boolean onMenuItemClick(MenuItem item) {
+                switch (item.getItemId()) {
+                    case R.id.active:
+                        mViewModel.setFiltering(TasksFilterType.ACTIVE_TASKS);
+                        break;
+                    case R.id.completed:
+                        mViewModel.setFiltering(TasksFilterType.COMPLETED_TASKS);
+                        break;
+                    default:
+                        mViewModel.setFiltering(TasksFilterType.ALL_TASKS);
+                        break;
+                }
+                mViewModel.loadTasks(false);
+                return true;
+            }
+        });
+
+        popup.show();
     }
 
     @Override
@@ -165,7 +190,6 @@ public class TasksActivity extends AppCompatActivity implements TaskItemNavigato
         Intent intent = new Intent(this, TaskDetailActivity.class);
         intent.putExtra(TaskDetailActivity.EXTRA_TASK_ID, taskId);
         startActivityForResult(intent, AddEditTaskActivity.REQUEST_CODE);
-
     }
 
     @Override

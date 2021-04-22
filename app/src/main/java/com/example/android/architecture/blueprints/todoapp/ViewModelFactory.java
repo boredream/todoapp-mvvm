@@ -19,15 +19,14 @@ package com.example.android.architecture.blueprints.todoapp;
 import android.annotation.SuppressLint;
 import android.app.Application;
 
-import com.example.android.architecture.blueprints.todoapp.addedittask.AddEditTaskViewModel;
-import com.example.android.architecture.blueprints.todoapp.data.source.TasksRepository;
-import com.example.android.architecture.blueprints.todoapp.statistics.StatisticsViewModel;
-import com.example.android.architecture.blueprints.todoapp.taskdetail.TaskDetailViewModel;
-import com.example.android.architecture.blueprints.todoapp.tasks.TasksViewModel;
-
 import androidx.annotation.VisibleForTesting;
 import androidx.lifecycle.ViewModel;
 import androidx.lifecycle.ViewModelProvider;
+
+import com.example.android.architecture.blueprints.todoapp.addedittask.AddEditTaskViewModel;
+import com.example.android.architecture.blueprints.todoapp.data.source.TasksRepository;
+import com.example.android.architecture.blueprints.todoapp.taskdetail.TaskDetailViewModel;
+import com.example.android.architecture.blueprints.todoapp.tasks.TasksViewModel;
 
 /**
  * A creator is used to inject the product ID into the ViewModel
@@ -70,10 +69,7 @@ public class ViewModelFactory extends ViewModelProvider.NewInstanceFactory {
 
     @Override
     public <T extends ViewModel> T create(Class<T> modelClass) {
-        if (modelClass.isAssignableFrom(StatisticsViewModel.class)) {
-            //noinspection unchecked
-            return (T) new StatisticsViewModel(mTasksRepository);
-        } else if (modelClass.isAssignableFrom(TaskDetailViewModel.class)) {
+        if (modelClass.isAssignableFrom(TaskDetailViewModel.class)) {
             //noinspection unchecked
             return (T) new TaskDetailViewModel(mTasksRepository);
         } else if (modelClass.isAssignableFrom(AddEditTaskViewModel.class)) {
