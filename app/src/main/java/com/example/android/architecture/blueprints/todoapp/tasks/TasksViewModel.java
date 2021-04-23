@@ -16,7 +16,6 @@
 
 package com.example.android.architecture.blueprints.todoapp.tasks;
 
-import androidx.arch.core.util.Function;
 import androidx.databinding.BaseObservable;
 import androidx.databinding.Bindable;
 import androidx.lifecycle.LiveData;
@@ -24,20 +23,19 @@ import androidx.lifecycle.MutableLiveData;
 import androidx.lifecycle.Transformations;
 import androidx.lifecycle.ViewModel;
 
+import com.example.android.architecture.blueprints.todoapp.BaseViewModel;
 import com.example.android.architecture.blueprints.todoapp.Event;
 import com.example.android.architecture.blueprints.todoapp.R;
 import com.example.android.architecture.blueprints.todoapp.addedittask.AddEditTaskActivity;
 import com.example.android.architecture.blueprints.todoapp.data.Task;
-import com.example.android.architecture.blueprints.todoapp.data.source.TasksDataSource;
 import com.example.android.architecture.blueprints.todoapp.data.source.TasksRepository;
 import com.example.android.architecture.blueprints.todoapp.taskdetail.TaskDetailActivity;
 
 import java.util.ArrayList;
 import java.util.List;
 
-import io.reactivex.SingleObserver;
+import io.reactivex.Single;
 import io.reactivex.android.schedulers.AndroidSchedulers;
-import io.reactivex.disposables.Disposable;
 import io.reactivex.schedulers.Schedulers;
 
 
@@ -48,7 +46,7 @@ import io.reactivex.schedulers.Schedulers;
  * property changes. This is done by assigning a {@link Bindable} annotation to the property's
  * getter method.
  */
-public class TasksViewModel extends ViewModel {
+public class TasksViewModel extends BaseViewModel {
 
     private final MutableLiveData<List<Task>> mItems = new MutableLiveData<>();
 
@@ -61,8 +59,6 @@ public class TasksViewModel extends ViewModel {
     private final MutableLiveData<Integer> mNoTaskIconRes = new MutableLiveData<>();
 
     private final MutableLiveData<Boolean> mTasksAddViewVisible = new MutableLiveData<>();
-
-    private final MutableLiveData<Event<Integer>> mSnackbarText = new MutableLiveData<>();
 
     private TasksFilterType mCurrentFiltering = TasksFilterType.ALL_TASKS;
 
@@ -77,7 +73,7 @@ public class TasksViewModel extends ViewModel {
 
     // This LiveData depends on another so we can use a transformation.
     public final LiveData<Boolean> empty = Transformations.map(mItems,
-            new Function<List<Task>, Boolean>() {
+            new androidx.arch.core.util.Function<List<Task>, Boolean>() {
                 @Override
                 public Boolean apply(List<Task> input) {
                     return input.isEmpty();
@@ -97,7 +93,7 @@ public class TasksViewModel extends ViewModel {
     }
 
     public void loadTasks(boolean forceUpdate) {
-        loadTasks(forceUpdate, true);
+        loadTasks(forceUpdate, true).subscribe();
     }
 
     /**
@@ -136,18 +132,19 @@ public class TasksViewModel extends ViewModel {
 
     public void clearCompletedTasks() {
         mTasksRepository.clearCompletedTasks();
-        mSnackbarText.setValue(new Event<>(R.string.completed_tasks_cleared));
-        loadTasks(false, false);
+        mSnackbarText.onNext(R.string.completed_tasks_cleared);
+        // TODO: chunyang 4/23/21
+        loadTasks(false, false).subscribe();
     }
 
     public void completeTask(Task task, boolean completed) {
         // Notify repository
         if (completed) {
             mTasksRepository.completeTask(task);
-            showSnackbarMessage(R.string.task_marked_complete);
+            mSnackbarText.onNext(R.string.task_marked_complete);
         } else {
             mTasksRepository.activateTask(task);
-            showSnackbarMessage(R.string.task_marked_active);
+            mSnackbarText.onNext(R.string.task_marked_active);
         }
     }
 
@@ -171,10 +168,6 @@ public class TasksViewModel extends ViewModel {
 
     public MutableLiveData<Integer> getNoTaskIconRes() {
         return mNoTaskIconRes;
-    }
-
-    public LiveData<Event<Integer>> getSnackbarMessage() {
-        return mSnackbarText;
     }
 
     public LiveData<Event<String>> getOpenTaskEvent() {
@@ -209,78 +202,79 @@ public class TasksViewModel extends ViewModel {
         if (AddEditTaskActivity.REQUEST_CODE == requestCode) {
             switch (resultCode) {
                 case TaskDetailActivity.EDIT_RESULT_OK:
-                    mSnackbarText.setValue(new Event<>(R.string.successfully_saved_task_message));
+                    mSnackbarText.onNext(R.string.successfully_saved_task_message);
                     break;
                 case AddEditTaskActivity.ADD_EDIT_RESULT_OK:
-                    mSnackbarText.setValue(new Event<>(R.string.successfully_added_task_message));
+                    mSnackbarText.onNext(R.string.successfully_added_task_message);
                     break;
                 case TaskDetailActivity.DELETE_RESULT_OK:
-                    mSnackbarText.setValue(new Event<>(R.string.successfully_deleted_task_message));
+                    mSnackbarText.onNext(R.string.successfully_deleted_task_message);
                     break;
             }
         }
     }
 
-    private void showSnackbarMessage(Integer message) {
-        mSnackbarText.setValue(new Event<>(message));
-    }
+//    private void showSnackbarMessage(Integer message) {
+//        mSnackbarText.onNext(message);
+//    }
 
-    /**
-     * @param forceUpdate   Pass in true to refresh the data in the {@link TasksDataSource}
-     * @param showLoadingUI Pass in true to display a loading icon in the UI
-     */
-    private void loadTasks(boolean forceUpdate, final boolean showLoadingUI) {
+    private Single<List<Task>> loadTasks(boolean forceUpdate, final boolean showLoadingUI) {
         if (forceUpdate) {
             mTasksRepository.refreshTasks();
         }
 
-        mTasksRepository.getTasks()
-                .subscribe(new SingleObserver<List<Task>>() {
-                    @Override
-                    public void onSubscribe(Disposable d) {
-                        if (showLoadingUI) {
-                            mDataLoading.setValue(true);
-                        }
+        return mTasksRepository.getTasks()
+                .doOnSubscribe(disposable -> {
+                    if (showLoadingUI) {
+                        mDataLoading.setValue(true);
                     }
+                    System.out.println("doOnSubscribe " + Thread.currentThread());
+                })
+                .doOnSuccess(tasks -> {
+                    System.out.println("doOnSuccess " + Thread.currentThread());
+                    if (showLoadingUI) {
+                        mDataLoading.setValue(false);
+                    }
+                    mIsDataLoadingError.setValue(false);
+                })
+                .doOnError(throwable -> {
+                    if (showLoadingUI) {
+                        mDataLoading.setValue(false);
+                    }
+                    mIsDataLoadingError.setValue(true);
+                    throwable.printStackTrace();
+                })
+                .map(tasks -> {
+                    System.out.println("map " + Thread.currentThread());
+                    List<Task> tasksToShow = new ArrayList<>();
 
-                    @Override
-                    public void onSuccess(List<Task> tasks) {
-                        List<Task> tasksToShow = new ArrayList<>();
-
-                        // We filter the tasks based on the requestType
-                        for (Task task : tasks) {
-                            switch (mCurrentFiltering) {
-                                case ALL_TASKS:
+                    // We filter the tasks based on the requestType
+                    for (Task task : tasks) {
+                        switch (mCurrentFiltering) {
+                            case ACTIVE_TASKS:
+                                if (task.isActive()) {
                                     tasksToShow.add(task);
-                                    break;
-                                case ACTIVE_TASKS:
-                                    if (task.isActive()) {
-                                        tasksToShow.add(task);
-                                    }
-                                    break;
-                                case COMPLETED_TASKS:
-                                    if (task.isCompleted()) {
-                                        tasksToShow.add(task);
-                                    }
-                                    break;
-                                default:
+                                }
+                                break;
+                            case COMPLETED_TASKS:
+                                if (task.isCompleted()) {
                                     tasksToShow.add(task);
-                                    break;
-                            }
+                                }
+                                break;
+                            case ALL_TASKS:
+                            default:
+                                tasksToShow.add(task);
+                                break;
                         }
-                        if (showLoadingUI) {
-                            mDataLoading.setValue(false);
-                        }
-                        mIsDataLoadingError.setValue(false);
-
-                        List<Task> itemsValue = new ArrayList<>(tasksToShow);
-                        mItems.setValue(itemsValue);
                     }
-
-                    @Override
-                    public void onError(Throwable e) {
-                        mIsDataLoadingError.setValue(true);
+                    if (showLoadingUI) {
+                        mDataLoading.setValue(false);
                     }
+                    mIsDataLoadingError.setValue(false);
+
+                    List<Task> itemsValue = new ArrayList<>(tasksToShow);
+                    mItems.setValue(itemsValue);
+                    return itemsValue;
                 });
     }
 

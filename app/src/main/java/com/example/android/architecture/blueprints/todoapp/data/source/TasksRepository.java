@@ -63,12 +63,9 @@ public class TasksRepository {
 
     public Single<List<Task>> getTasks() {
         EspressoIdlingResource.increment(); // App is busy until further notice
-        return Single.create(new SingleOnSubscribe<List<Task>>() {
-            @Override
-            public void subscribe(SingleEmitter<List<Task>> emitter) throws Exception {
-                EspressoIdlingResource.decrement(); // Set app as idle.
-                emitter.onSuccess(mTasksDao.getTasks());
-            }
+        return Single.create((SingleOnSubscribe<List<Task>>) emitter -> {
+            EspressoIdlingResource.decrement(); // Set app as idle.
+            emitter.onSuccess(mTasksDao.getTasks());
         }).delay(SERVICE_LATENCY_IN_MILLIS, TimeUnit.MILLISECONDS)
                 .subscribeOn(Schedulers.io())
                 .observeOn(AndroidSchedulers.mainThread());
@@ -76,100 +73,77 @@ public class TasksRepository {
 
     public Single<String> saveTask(@NonNull final Task task) {
         EspressoIdlingResource.increment(); // App is busy until further notice
-        return Single.create(new SingleOnSubscribe<String>() {
-            @Override
-            public void subscribe(SingleEmitter<String> emitter) throws Exception {
-                EspressoIdlingResource.decrement(); // Set app as idle.
-                mTasksDao.insertTask(task);
-                emitter.onSuccess("ok");
-            }
+        return Single.create((SingleOnSubscribe<String>) emitter -> {
+            EspressoIdlingResource.decrement(); // Set app as idle.
+            mTasksDao.insertTask(task);
+            emitter.onSuccess("ok");
         }).delay(SERVICE_LATENCY_IN_MILLIS, TimeUnit.MILLISECONDS);
     }
 
     public Single<String> completeTask(@NonNull final Task task) {
         EspressoIdlingResource.increment(); // App is busy until further notice
-        return Single.create(new SingleOnSubscribe<String>() {
-            @Override
-            public void subscribe(SingleEmitter<String> emitter) throws Exception {
-                EspressoIdlingResource.decrement(); // Set app as idle.
-                mTasksDao.updateCompleted(task.getId(), true);
-                emitter.onSuccess("ok");
-            }
+        return Single.create((SingleOnSubscribe<String>) emitter -> {
+            EspressoIdlingResource.decrement(); // Set app as idle.
+            mTasksDao.updateCompleted(task.getId(), true);
+            emitter.onSuccess("ok");
         }).delay(SERVICE_LATENCY_IN_MILLIS, TimeUnit.MILLISECONDS);
     }
 
     public Single<String> completeTask(@NonNull final String taskId) {
         EspressoIdlingResource.increment(); // App is busy until further notice
-        return Single.create(new SingleOnSubscribe<String>() {
-            @Override
-            public void subscribe(SingleEmitter<String> emitter) throws Exception {
-                EspressoIdlingResource.decrement(); // Set app as idle.
-                mTasksDao.updateCompleted(taskId, true);
-                emitter.onSuccess("ok");
-            }
+        return Single.create((SingleOnSubscribe<String>) emitter -> {
+            EspressoIdlingResource.decrement(); // Set app as idle.
+            mTasksDao.updateCompleted(taskId, true);
+            emitter.onSuccess("ok");
         }).delay(SERVICE_LATENCY_IN_MILLIS, TimeUnit.MILLISECONDS);
     }
 
     public Single<String> activateTask(@NonNull final Task task) {
         EspressoIdlingResource.increment(); // App is busy until further notice
-        return Single.create(new SingleOnSubscribe<String>() {
-            @Override
-            public void subscribe(SingleEmitter<String> emitter) throws Exception {
-                EspressoIdlingResource.decrement(); // Set app as idle.
-                mTasksDao.updateCompleted(task.getId(), false);
-                emitter.onSuccess("ok");
-            }
+        return Single.create((SingleOnSubscribe<String>) emitter -> {
+            EspressoIdlingResource.decrement(); // Set app as idle.
+            mTasksDao.updateCompleted(task.getId(), false);
+            emitter.onSuccess("ok");
         }).delay(SERVICE_LATENCY_IN_MILLIS, TimeUnit.MILLISECONDS);
     }
 
     public Single<String> activateTask(@NonNull final String taskId) {
         EspressoIdlingResource.increment(); // App is busy until further notice
-        return Single.create(new SingleOnSubscribe<String>() {
-            @Override
-            public void subscribe(SingleEmitter<String> emitter) throws Exception {
-                EspressoIdlingResource.decrement(); // Set app as idle.
-                mTasksDao.updateCompleted(taskId, false);
-                emitter.onSuccess("ok");
-            }
+        return Single.create((SingleOnSubscribe<String>) emitter -> {
+            EspressoIdlingResource.decrement(); // Set app as idle.
+            mTasksDao.updateCompleted(taskId, false);
+            emitter.onSuccess("ok");
         }).delay(SERVICE_LATENCY_IN_MILLIS, TimeUnit.MILLISECONDS);
     }
 
     public Single<String> clearCompletedTasks() {
         EspressoIdlingResource.increment(); // App is busy until further notice
-        return Single.create(new SingleOnSubscribe<String>() {
-            @Override
-            public void subscribe(SingleEmitter<String> emitter) throws Exception {
-                EspressoIdlingResource.decrement(); // Set app as idle.
-                mTasksDao.deleteCompletedTasks();
-                emitter.onSuccess("ok");
-            }
+        return Single.create((SingleOnSubscribe<String>) emitter -> {
+            EspressoIdlingResource.decrement(); // Set app as idle.
+            mTasksDao.deleteCompletedTasks();
+            emitter.onSuccess("ok");
         }).delay(SERVICE_LATENCY_IN_MILLIS, TimeUnit.MILLISECONDS);
     }
 
     public Single<Task> getTask(@NonNull final String taskId) {
         EspressoIdlingResource.increment(); // App is busy until further notice
-        return Single.create(new SingleOnSubscribe<Task>() {
-            @Override
-            public void subscribe(SingleEmitter<Task> emitter) throws Exception {
-                EspressoIdlingResource.decrement(); // Set app as idle.
-                emitter.onSuccess(mTasksDao.getTaskById(taskId));
-            }
+        return Single.create((SingleOnSubscribe<Task>) emitter -> {
+            EspressoIdlingResource.decrement(); // Set app as idle.
+            emitter.onSuccess(mTasksDao.getTaskById(taskId));
         }).delay(SERVICE_LATENCY_IN_MILLIS, TimeUnit.MILLISECONDS);
     }
 
     public void refreshTasks() {
 //        mCacheIsDirty = true;
+        // TODO: chunyang 4/23/21
     }
 
     public Single<String> deleteAllTasks() {
         EspressoIdlingResource.increment(); // App is busy until further notice
-        return Single.create(new SingleOnSubscribe<String>() {
-            @Override
-            public void subscribe(SingleEmitter<String> emitter) throws Exception {
-                EspressoIdlingResource.decrement(); // Set app as idle.
-                mTasksDao.deleteTasks();
-                emitter.onSuccess("ok");
-            }
+        return Single.create((SingleOnSubscribe<String>) emitter -> {
+            EspressoIdlingResource.decrement(); // Set app as idle.
+            mTasksDao.deleteTasks();
+            emitter.onSuccess("ok");
         }).delay(SERVICE_LATENCY_IN_MILLIS, TimeUnit.MILLISECONDS);
     }
 

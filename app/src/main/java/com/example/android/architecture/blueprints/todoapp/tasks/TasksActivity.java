@@ -16,6 +16,7 @@
 
 package com.example.android.architecture.blueprints.todoapp.tasks;
 
+import android.annotation.SuppressLint;
 import android.content.Intent;
 import android.os.Bundle;
 import android.view.Menu;
@@ -43,6 +44,8 @@ import com.example.android.architecture.blueprints.todoapp.taskdetail.TaskDetail
 import com.example.android.architecture.blueprints.todoapp.taskdetail.TaskDetailViewModel;
 
 import java.util.ArrayList;
+
+import io.reactivex.functions.Consumer;
 
 
 public class TasksActivity extends BaseActivity implements TaskItemNavigator, TasksNavigator {
@@ -97,16 +100,10 @@ public class TasksActivity extends BaseActivity implements TaskItemNavigator, Ta
         setSupportActionBar(toolbar);
     }
 
+    @SuppressLint("CheckResult")
     private void setupSnackbar() {
-        mViewModel.getSnackbarMessage().observe(this, new Observer<Event<Integer>>() {
-            @Override
-            public void onChanged(Event<Integer> event) {
-                Integer msg = event.getContentIfNotHandled();
-                if (msg != null) {
-                    Toast.makeText(TasksActivity.this, getString(msg), Toast.LENGTH_SHORT).show();
-                }
-            }
-        });
+        mViewModel.getSnackbarMessage().subscribe(msgId ->
+                Toast.makeText(TasksActivity.this, getString(msgId), Toast.LENGTH_SHORT).show());
     }
 
     private void setupListAdapter() {
