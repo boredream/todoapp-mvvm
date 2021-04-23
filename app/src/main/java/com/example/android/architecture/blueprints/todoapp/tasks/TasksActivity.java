@@ -16,7 +16,6 @@
 
 package com.example.android.architecture.blueprints.todoapp.tasks;
 
-import android.annotation.SuppressLint;
 import android.content.Intent;
 import android.os.Bundle;
 import android.view.Menu;
@@ -30,9 +29,9 @@ import androidx.core.content.ContextCompat;
 import androidx.databinding.DataBindingUtil;
 import androidx.lifecycle.Observer;
 import androidx.lifecycle.ViewModelProvider;
-import androidx.lifecycle.ViewModelProviders;
 
 import com.example.android.architecture.blueprints.todoapp.BaseActivity;
+import com.example.android.architecture.blueprints.todoapp.BaseViewModel;
 import com.example.android.architecture.blueprints.todoapp.Event;
 import com.example.android.architecture.blueprints.todoapp.R;
 import com.example.android.architecture.blueprints.todoapp.ScrollChildSwipeRefreshLayout;
@@ -41,11 +40,8 @@ import com.example.android.architecture.blueprints.todoapp.addedittask.AddEditTa
 import com.example.android.architecture.blueprints.todoapp.data.Task;
 import com.example.android.architecture.blueprints.todoapp.databinding.TasksActBinding;
 import com.example.android.architecture.blueprints.todoapp.taskdetail.TaskDetailActivity;
-import com.example.android.architecture.blueprints.todoapp.taskdetail.TaskDetailViewModel;
 
 import java.util.ArrayList;
-
-import io.reactivex.functions.Consumer;
 
 
 public class TasksActivity extends BaseActivity implements TaskItemNavigator, TasksNavigator {
@@ -55,9 +51,7 @@ public class TasksActivity extends BaseActivity implements TaskItemNavigator, Ta
     private TasksAdapter mListAdapter;
 
     @Override
-    protected void onCreate(Bundle savedInstanceState) {
-        super.onCreate(savedInstanceState);
-
+    protected BaseViewModel genViewModel() {
         mBinding = DataBindingUtil.setContentView(this, R.layout.tasks_act);
         ViewModelFactory factory = ViewModelFactory.getInstance(getApplication());
         mViewModel = new ViewModelProvider(this, factory).get(TasksViewModel.class);
@@ -65,8 +59,14 @@ public class TasksActivity extends BaseActivity implements TaskItemNavigator, Ta
         mBinding.setLifecycleOwner(this);
         mBinding.setViewModel(mViewModel);
 
+        return mViewModel;
+    }
+
+    @Override
+    protected void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+
         setupToolbar();
-        setupSnackbar();
         setupListAdapter();
         setupRefreshLayout();
 
@@ -98,12 +98,6 @@ public class TasksActivity extends BaseActivity implements TaskItemNavigator, Ta
     private void setupToolbar() {
         Toolbar toolbar = findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
-    }
-
-    @SuppressLint("CheckResult")
-    private void setupSnackbar() {
-        mViewModel.getSnackbarMessage().subscribe(msgId ->
-                Toast.makeText(TasksActivity.this, getString(msgId), Toast.LENGTH_SHORT).show());
     }
 
     private void setupListAdapter() {

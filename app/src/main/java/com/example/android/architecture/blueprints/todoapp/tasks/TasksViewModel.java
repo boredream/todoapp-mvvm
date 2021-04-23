@@ -21,7 +21,6 @@ import androidx.databinding.Bindable;
 import androidx.lifecycle.LiveData;
 import androidx.lifecycle.MutableLiveData;
 import androidx.lifecycle.Transformations;
-import androidx.lifecycle.ViewModel;
 
 import com.example.android.architecture.blueprints.todoapp.BaseViewModel;
 import com.example.android.architecture.blueprints.todoapp.Event;
@@ -34,9 +33,8 @@ import com.example.android.architecture.blueprints.todoapp.taskdetail.TaskDetail
 import java.util.ArrayList;
 import java.util.List;
 
-import io.reactivex.Single;
-import io.reactivex.android.schedulers.AndroidSchedulers;
-import io.reactivex.schedulers.Schedulers;
+import io.reactivex.SingleObserver;
+import io.reactivex.disposables.Disposable;
 
 
 /**
@@ -49,8 +47,6 @@ import io.reactivex.schedulers.Schedulers;
 public class TasksViewModel extends BaseViewModel {
 
     private final MutableLiveData<List<Task>> mItems = new MutableLiveData<>();
-
-    private final MutableLiveData<Boolean> mDataLoading = new MutableLiveData<>();
 
     private final MutableLiveData<Integer> mCurrentFilteringLabel = new MutableLiveData<>();
 
@@ -93,7 +89,7 @@ public class TasksViewModel extends BaseViewModel {
     }
 
     public void loadTasks(boolean forceUpdate) {
-        loadTasks(forceUpdate, true).subscribe();
+        loadTasks(forceUpdate, true);
     }
 
     /**
@@ -132,19 +128,18 @@ public class TasksViewModel extends BaseViewModel {
 
     public void clearCompletedTasks() {
         mTasksRepository.clearCompletedTasks();
-        mSnackbarText.onNext(R.string.completed_tasks_cleared);
-        // TODO: chunyang 4/23/21
-        loadTasks(false, false).subscribe();
+        mToastSubject.onNext(R.string.completed_tasks_cleared);
+        loadTasks(false, false);
     }
 
     public void completeTask(Task task, boolean completed) {
         // Notify repository
         if (completed) {
             mTasksRepository.completeTask(task);
-            mSnackbarText.onNext(R.string.task_marked_complete);
+            mToastSubject.onNext(R.string.task_marked_complete);
         } else {
             mTasksRepository.activateTask(task);
-            mSnackbarText.onNext(R.string.task_marked_active);
+            mToastSubject.onNext(R.string.task_marked_active);
         }
     }
 
@@ -152,10 +147,6 @@ public class TasksViewModel extends BaseViewModel {
 
     public LiveData<Boolean> getTasksAddViewVisible() {
         return mTasksAddViewVisible;
-    }
-
-    public LiveData<Boolean> isDataLoading() {
-        return mDataLoading;
     }
 
     public MutableLiveData<Integer> getCurrentFilteringLabel() {
@@ -202,13 +193,13 @@ public class TasksViewModel extends BaseViewModel {
         if (AddEditTaskActivity.REQUEST_CODE == requestCode) {
             switch (resultCode) {
                 case TaskDetailActivity.EDIT_RESULT_OK:
-                    mSnackbarText.onNext(R.string.successfully_saved_task_message);
+                    mToastSubject.onNext(R.string.successfully_saved_task_message);
                     break;
                 case AddEditTaskActivity.ADD_EDIT_RESULT_OK:
-                    mSnackbarText.onNext(R.string.successfully_added_task_message);
+                    mToastSubject.onNext(R.string.successfully_added_task_message);
                     break;
                 case TaskDetailActivity.DELETE_RESULT_OK:
-                    mSnackbarText.onNext(R.string.successfully_deleted_task_message);
+                    mToastSubject.onNext(R.string.successfully_deleted_task_message);
                     break;
             }
         }
@@ -218,63 +209,65 @@ public class TasksViewModel extends BaseViewModel {
 //        mSnackbarText.onNext(message);
 //    }
 
-    private Single<List<Task>> loadTasks(boolean forceUpdate, final boolean showLoadingUI) {
+    private void loadTasks(boolean forceUpdate, final boolean showLoadingUI) {
         if (forceUpdate) {
             mTasksRepository.refreshTasks();
         }
 
-        return mTasksRepository.getTasks()
-                .doOnSubscribe(disposable -> {
-                    if (showLoadingUI) {
-                        mDataLoading.setValue(true);
-                    }
-                    System.out.println("doOnSubscribe " + Thread.currentThread());
-                })
-                .doOnSuccess(tasks -> {
-                    System.out.println("doOnSuccess " + Thread.currentThread());
-                    if (showLoadingUI) {
-                        mDataLoading.setValue(false);
-                    }
-                    mIsDataLoadingError.setValue(false);
-                })
-                .doOnError(throwable -> {
-                    if (showLoadingUI) {
-                        mDataLoading.setValue(false);
-                    }
-                    mIsDataLoadingError.setValue(true);
-                    throwable.printStackTrace();
-                })
-                .map(tasks -> {
-                    System.out.println("map " + Thread.currentThread());
-                    List<Task> tasksToShow = new ArrayList<>();
-
-                    // We filter the tasks based on the requestType
-                    for (Task task : tasks) {
-                        switch (mCurrentFiltering) {
-                            case ACTIVE_TASKS:
-                                if (task.isActive()) {
-                                    tasksToShow.add(task);
-                                }
-                                break;
-                            case COMPLETED_TASKS:
-                                if (task.isCompleted()) {
-                                    tasksToShow.add(task);
-                                }
-                                break;
-                            case ALL_TASKS:
-                            default:
-                                tasksToShow.add(task);
-                                break;
+        mTasksRepository.getTasks()
+                .subscribe(new SingleObserver<List<Task>>() {
+                    @Override
+                    public void onSubscribe(Disposable d) {
+                        if (showLoadingUI) {
+                            mDataLoading.setValue(true);
                         }
                     }
-                    if (showLoadingUI) {
-                        mDataLoading.setValue(false);
-                    }
-                    mIsDataLoadingError.setValue(false);
 
-                    List<Task> itemsValue = new ArrayList<>(tasksToShow);
-                    mItems.setValue(itemsValue);
-                    return itemsValue;
+                    @Override
+                    public void onSuccess(List<Task> tasks) {
+                        if (showLoadingUI) {
+                            mDataLoading.setValue(false);
+                        }
+                        mIsDataLoadingError.setValue(false);
+
+                        List<Task> tasksToShow = new ArrayList<>();
+
+                        // We filter the tasks based on the requestType
+                        for (Task task : tasks) {
+                            switch (mCurrentFiltering) {
+                                case ACTIVE_TASKS:
+                                    if (task.isActive()) {
+                                        tasksToShow.add(task);
+                                    }
+                                    break;
+                                case COMPLETED_TASKS:
+                                    if (task.isCompleted()) {
+                                        tasksToShow.add(task);
+                                    }
+                                    break;
+                                case ALL_TASKS:
+                                default:
+                                    tasksToShow.add(task);
+                                    break;
+                            }
+                        }
+                        if (showLoadingUI) {
+                            mDataLoading.setValue(false);
+                        }
+                        mIsDataLoadingError.setValue(false);
+
+                        List<Task> itemsValue = new ArrayList<>(tasksToShow);
+                        mItems.setValue(itemsValue);
+                    }
+
+                    @Override
+                    public void onError(Throwable e) {
+                        if (showLoadingUI) {
+                            mDataLoading.setValue(false);
+                        }
+                        mIsDataLoadingError.setValue(true);
+                        e.printStackTrace();
+                    }
                 });
     }
 

@@ -65,15 +65,15 @@ public class TaskDetailFragment extends Fragment {
     }
 
     private void setupSnackbar() {
-        mViewModel.getSnackbarMessage().observe(this, new Observer<Event<Integer>>() {
-            @Override
-            public void onChanged(Event<Integer> event) {
-                Integer msg = event.getContentIfNotHandled();
-                if (msg != null) {
-                    SnackbarUtils.showSnackbar(getView(), getString(msg));
-                }
-            }
-        });
+//        mViewModel.getSnackbarMessage().observe(this, new Observer<Event<Integer>>() {
+//            @Override
+//            public void onChanged(Event<Integer> event) {
+//                Integer msg = event.getContentIfNotHandled();
+//                if (msg != null) {
+//                    SnackbarUtils.showSnackbar(getView(), getString(msg));
+//                }
+//            }
+//        });
     }
 
     private void setupFab() {

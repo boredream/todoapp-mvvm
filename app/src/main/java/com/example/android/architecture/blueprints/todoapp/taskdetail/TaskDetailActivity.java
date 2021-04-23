@@ -16,31 +16,30 @@
 
 package com.example.android.architecture.blueprints.todoapp.taskdetail;
 
-import static com.example.android.architecture.blueprints.todoapp.addedittask.AddEditTaskActivity.ADD_EDIT_RESULT_OK;
-import static com.example.android.architecture.blueprints.todoapp.taskdetail.TaskDetailFragment.REQUEST_EDIT_TASK;
-
 import android.content.Intent;
 import android.os.Bundle;
 
-import com.example.android.architecture.blueprints.todoapp.Event;
-import com.example.android.architecture.blueprints.todoapp.R;
-import com.example.android.architecture.blueprints.todoapp.ViewModelFactory;
-import com.example.android.architecture.blueprints.todoapp.addedittask.AddEditTaskActivity;
-import com.example.android.architecture.blueprints.todoapp.addedittask.AddEditTaskFragment;
-import com.example.android.architecture.blueprints.todoapp.util.ActivityUtils;
-
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.ActionBar;
-import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.Toolbar;
 import androidx.fragment.app.FragmentActivity;
 import androidx.lifecycle.Observer;
 import androidx.lifecycle.ViewModelProviders;
 
+import com.example.android.architecture.blueprints.todoapp.BaseActivity;
+import com.example.android.architecture.blueprints.todoapp.BaseViewModel;
+import com.example.android.architecture.blueprints.todoapp.Event;
+import com.example.android.architecture.blueprints.todoapp.R;
+import com.example.android.architecture.blueprints.todoapp.ViewModelFactory;
+import com.example.android.architecture.blueprints.todoapp.util.ActivityUtils;
+
+import static com.example.android.architecture.blueprints.todoapp.addedittask.AddEditTaskActivity.ADD_EDIT_RESULT_OK;
+import static com.example.android.architecture.blueprints.todoapp.taskdetail.TaskDetailFragment.REQUEST_EDIT_TASK;
+
 /**
  * Displays task details screen.
  */
-public class TaskDetailActivity extends AppCompatActivity implements TaskDetailNavigator {
+public class TaskDetailActivity extends BaseActivity implements TaskDetailNavigator {
 
     public static final String EXTRA_TASK_ID = "TASK_ID";
 
@@ -49,6 +48,11 @@ public class TaskDetailActivity extends AppCompatActivity implements TaskDetailN
     public static final int EDIT_RESULT_OK = RESULT_FIRST_USER + 3;
 
     private TaskDetailViewModel mTaskViewModel;
+
+    @Override
+    protected BaseViewModel genViewModel() {
+        return mTaskViewModel;
+    }
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -120,6 +124,7 @@ public class TaskDetailActivity extends AppCompatActivity implements TaskDetailN
 
     @Override
     public void onActivityResult(int requestCode, int resultCode, Intent data) {
+        super.onActivityResult(requestCode, resultCode, data);
         if (requestCode == REQUEST_EDIT_TASK) {
             // If the task was edited successfully, go back to the list.
             if (resultCode == ADD_EDIT_RESULT_OK) {
@@ -145,10 +150,11 @@ public class TaskDetailActivity extends AppCompatActivity implements TaskDetailN
 
     @Override
     public void onStartEditTask() {
-        String taskId = getIntent().getStringExtra(EXTRA_TASK_ID);
-        Intent intent = new Intent(this, AddEditTaskActivity.class);
-        intent.putExtra(AddEditTaskFragment.ARGUMENT_EDIT_TASK_ID, taskId);
-        startActivityForResult(intent, REQUEST_EDIT_TASK);
+        // TODO: chunyang 4/23/21
+//        String taskId = getIntent().getStringExtra(EXTRA_TASK_ID);
+//        Intent intent = new Intent(this, AddEditTaskActivity.class);
+//        intent.putExtra(AddEditTaskFragment.ARGUMENT_EDIT_TASK_ID, taskId);
+//        startActivityForResult(intent, REQUEST_EDIT_TASK);
     }
 
 }

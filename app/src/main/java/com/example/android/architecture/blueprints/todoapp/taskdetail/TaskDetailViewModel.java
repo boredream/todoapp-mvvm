@@ -17,13 +17,12 @@
 package com.example.android.architecture.blueprints.todoapp.taskdetail;
 
 import androidx.annotation.Nullable;
-import androidx.annotation.StringRes;
 import androidx.arch.core.util.Function;
 import androidx.lifecycle.LiveData;
 import androidx.lifecycle.MutableLiveData;
 import androidx.lifecycle.Transformations;
-import androidx.lifecycle.ViewModel;
 
+import com.example.android.architecture.blueprints.todoapp.BaseViewModel;
 import com.example.android.architecture.blueprints.todoapp.Event;
 import com.example.android.architecture.blueprints.todoapp.R;
 import com.example.android.architecture.blueprints.todoapp.data.Task;
@@ -31,19 +30,15 @@ import com.example.android.architecture.blueprints.todoapp.data.source.TasksData
 import com.example.android.architecture.blueprints.todoapp.data.source.TasksRepository;
 
 
-public class TaskDetailViewModel extends ViewModel implements TasksDataSource.GetTaskCallback {
+public class TaskDetailViewModel extends BaseViewModel implements TasksDataSource.GetTaskCallback {
 
     private final MutableLiveData<Task> mTask = new MutableLiveData<>();
 
     private final MutableLiveData<Boolean> mIsDataAvailable = new MutableLiveData<>();
 
-    private final MutableLiveData<Boolean> mDataLoading = new MutableLiveData<>();
-
     private final MutableLiveData<Event<Object>> mEditTaskCommand = new MutableLiveData<>();
 
     private final MutableLiveData<Event<Object>> mDeleteTaskCommand = new MutableLiveData<>();
-
-    private final MutableLiveData<Event<Integer>> mSnackbarText = new MutableLiveData<>();
 
     private final TasksRepository mTasksRepository;
 
@@ -70,10 +65,6 @@ public class TaskDetailViewModel extends ViewModel implements TasksDataSource.Ge
 
     public void editTask() {
         mEditTaskCommand.setValue(new Event<>(new Object()));
-    }
-
-    public LiveData<Event<Integer>> getSnackbarMessage() {
-        return mSnackbarText;
     }
 
     public MutableLiveData<Event<Object>> getEditTaskCommand() {
@@ -103,10 +94,10 @@ public class TaskDetailViewModel extends ViewModel implements TasksDataSource.Ge
         Task task = this.mTask.getValue();
         if (completed) {
             mTasksRepository.completeTask(task);
-            showSnackbarMessage(R.string.task_marked_complete);
+            mToastSubject.onNext(R.string.task_marked_complete);
         } else {
             mTasksRepository.activateTask(task);
-            showSnackbarMessage(R.string.task_marked_active);
+            mToastSubject.onNext(R.string.task_marked_active);
         }
     }
 
@@ -145,9 +136,5 @@ public class TaskDetailViewModel extends ViewModel implements TasksDataSource.Ge
     @Nullable
     protected String getTaskId() {
         return mTask.getValue().getId();
-    }
-
-    private void showSnackbarMessage(@StringRes Integer message) {
-        mSnackbarText.setValue(new Event<>(message));
     }
 }

@@ -17,39 +17,32 @@
 package com.example.android.architecture.blueprints.todoapp;
 
 import androidx.annotation.NonNull;
+import androidx.lifecycle.LiveData;
+import androidx.lifecycle.MutableLiveData;
 import androidx.lifecycle.ViewModel;
 
 import io.reactivex.Observable;
-import io.reactivex.subjects.BehaviorSubject;
 import io.reactivex.subjects.PublishSubject;
 
 
 public class BaseViewModel extends ViewModel {
 
-//    // using a BehaviourSubject because we are interested in the last object that was emitted before
-//    // subscribing. Like this we ensure that the loading indicator has the correct visibility.
-//    protected final BehaviorSubject<Boolean> mLoadingIndicatorSubject;
+    // live data 直接绑定
+    protected final MutableLiveData<Boolean> mDataLoading = new MutableLiveData<>();
 
-    // using a PublishSubject because we are not interested in the last object that was emitted
-    // before subscribing. Like this we avoid displaying the snackbar multiple times
-    @NonNull
-    protected final PublishSubject<Integer> mSnackbarText;
+    // 事件用 subject，获取监听回调
+    protected final PublishSubject<Integer> mToastSubject;
 
     public BaseViewModel() {
-//        mLoadingIndicatorSubject = BehaviorSubject.createDefault(false);
-        mSnackbarText = PublishSubject.create();
+        mToastSubject = PublishSubject.create();
+    }
+
+    public LiveData<Boolean> isDataLoading() {
+        return mDataLoading;
     }
 
     @NonNull
-    public Observable<Integer> getSnackbarMessage() {
-        return mSnackbarText;
+    public Observable<Integer> getToastSubject() {
+        return mToastSubject;
     }
-
-//    /**
-//     * @return a stream that emits true if the progress indicator should be displayed, false otherwise.
-//     */
-//    @NonNull
-//    public Observable<Boolean> getLoadingIndicatorVisibility() {
-//        return mLoadingIndicatorSubject;
-//    }
 }

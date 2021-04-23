@@ -16,17 +16,17 @@
 
 package com.example.android.architecture.blueprints.todoapp.addedittask;
 
+import androidx.annotation.Nullable;
+import androidx.databinding.ObservableField;
+import androidx.lifecycle.LiveData;
+import androidx.lifecycle.MutableLiveData;
+
+import com.example.android.architecture.blueprints.todoapp.BaseViewModel;
 import com.example.android.architecture.blueprints.todoapp.Event;
 import com.example.android.architecture.blueprints.todoapp.R;
 import com.example.android.architecture.blueprints.todoapp.data.Task;
 import com.example.android.architecture.blueprints.todoapp.data.source.TasksDataSource;
 import com.example.android.architecture.blueprints.todoapp.data.source.TasksRepository;
-
-import androidx.annotation.Nullable;
-import androidx.databinding.ObservableField;
-import androidx.lifecycle.LiveData;
-import androidx.lifecycle.MutableLiveData;
-import androidx.lifecycle.ViewModel;
 
 /**
  * ViewModel for the Add/Edit screen.
@@ -34,17 +34,13 @@ import androidx.lifecycle.ViewModel;
  * This ViewModel only exposes {@link ObservableField}s, so it doesn't need to extend
  * {@link androidx.databinding.BaseObservable} and updates are notified automatically.
  */
-public class AddEditTaskViewModel extends ViewModel implements TasksDataSource.GetTaskCallback {
+public class AddEditTaskViewModel extends BaseViewModel implements TasksDataSource.GetTaskCallback {
 
     // Two-way databinding, exposing MutableLiveData
     public final MutableLiveData<String> title = new MutableLiveData<>();
 
     // Two-way databinding, exposing MutableLiveData
     public final MutableLiveData<String> description = new MutableLiveData<>();
-
-    private final MutableLiveData<Boolean> dataLoading = new MutableLiveData<>();
-
-    private final MutableLiveData<Event<Integer>> mSnackbarText = new MutableLiveData<>();
 
     private final MutableLiveData<Event<Object>> mTaskUpdated = new MutableLiveData<>();
 
@@ -64,7 +60,7 @@ public class AddEditTaskViewModel extends ViewModel implements TasksDataSource.G
     }
 
     public void start(String taskId) {
-        if (dataLoading.getValue() != null && dataLoading.getValue()) {
+        if (mDataLoading.getValue() != null && mDataLoading.getValue()) {
             // Already loading, ignore.
             return;
         }
@@ -79,7 +75,7 @@ public class AddEditTaskViewModel extends ViewModel implements TasksDataSource.G
             return;
         }
         mIsNewTask = false;
-        dataLoading.setValue(true);
+        mDataLoading.setValue(true);
 
 //        mTasksRepository.getTask(taskId, this);
         // FIXME: 4/22/21 
@@ -90,20 +86,20 @@ public class AddEditTaskViewModel extends ViewModel implements TasksDataSource.G
         title.setValue(task.getTitle());
         description.setValue(task.getDescription());
         mTaskCompleted = task.isCompleted();
-        dataLoading.setValue(false);
+        mDataLoading.setValue(false);
         mIsDataLoaded = true;
     }
 
     @Override
     public void onDataNotAvailable() {
-        dataLoading.setValue(false);
+        mDataLoading.setValue(false);
     }
 
     // Called when clicking on fab.
     void saveTask() {
         Task task = new Task(title.getValue(), description.getValue());
         if (task.isEmpty()) {
-            mSnackbarText.setValue(new Event<>(R.string.empty_task_message));
+            mToastSubject.onNext(R.string.empty_task_message);
             return;
         }
         if (isNewTask() || mTaskId == null) {
@@ -114,16 +110,8 @@ public class AddEditTaskViewModel extends ViewModel implements TasksDataSource.G
         }
     }
 
-    public LiveData<Event<Integer>> getSnackbarMessage() {
-        return mSnackbarText;
-    }
-
     public LiveData<Event<Object>> getTaskUpdatedEvent() {
         return mTaskUpdated;
-    }
-
-    public LiveData<Boolean> getDataLoading() {
-        return dataLoading;
     }
 
     private boolean isNewTask() {

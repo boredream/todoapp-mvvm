@@ -17,28 +17,40 @@
 package com.example.android.architecture.blueprints.todoapp.addedittask;
 
 import android.os.Bundle;
+import android.view.View;
 
+import com.example.android.architecture.blueprints.todoapp.BaseActivity;
+import com.example.android.architecture.blueprints.todoapp.BaseViewModel;
 import com.example.android.architecture.blueprints.todoapp.Event;
 import com.example.android.architecture.blueprints.todoapp.R;
 import com.example.android.architecture.blueprints.todoapp.ViewModelFactory;
-import com.example.android.architecture.blueprints.todoapp.util.ActivityUtils;
+import com.example.android.architecture.blueprints.todoapp.databinding.AddtaskActBinding;
+import com.example.android.architecture.blueprints.todoapp.tasks.TasksViewModel;
+import com.example.android.architecture.blueprints.todoapp.util.SnackbarUtils;
+import com.google.android.material.floatingactionbutton.FloatingActionButton;
 
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.ActionBar;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.Toolbar;
+import androidx.databinding.DataBindingUtil;
+import androidx.databinding.ViewDataBinding;
 import androidx.fragment.app.FragmentActivity;
 import androidx.lifecycle.Observer;
-import androidx.lifecycle.ViewModelProviders;
+import androidx.lifecycle.ViewModelProvider;
 
 /**
  * Displays an add or edit task screen.
  */
-public class AddEditTaskActivity extends AppCompatActivity implements AddEditTaskNavigator {
+public class AddEditTaskActivity extends BaseActivity implements AddEditTaskNavigator {
 
     public static final int REQUEST_CODE = 1;
 
     public static final int ADD_EDIT_RESULT_OK = RESULT_FIRST_USER + 1;
+    public static final String ARGUMENT_EDIT_TASK_ID = "taskId";
+
+    private AddEditTaskViewModel mViewModel;
+    private AddtaskActBinding mBinding;
 
     @Override
     public boolean onSupportNavigateUp() {
@@ -53,23 +65,69 @@ public class AddEditTaskActivity extends AppCompatActivity implements AddEditTas
     }
 
     @Override
+    protected BaseViewModel genViewModel() {
+        mBinding = DataBindingUtil.setContentView(this, R.layout.addtask_act);
+        mViewModel = obtainViewModel(this);
+
+        mBinding.setLifecycleOwner(this);
+        mBinding.setViewModel(mViewModel);
+
+        return mViewModel;
+    }
+
+    @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.addtask_act);
 
+        setupToolbar();
+        setupFab();
+        setupActionBar();
+
+        loadData();
+
+        subscribeToNavigationChanges();
+    }
+
+    private void setupToolbar() {
         // Set up the toolbar.
         Toolbar toolbar = findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
         ActionBar actionBar = getSupportActionBar();
         actionBar.setDisplayHomeAsUpEnabled(true);
         actionBar.setDisplayShowHomeEnabled(true);
+    }
 
-        AddEditTaskFragment addEditTaskFragment = obtainViewFragment();
+    private void setupFab() {
+        FloatingActionButton fab = findViewById(R.id.fab_edit_task_done);
+        fab.setImageResource(R.drawable.ic_done);
+        fab.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                mViewModel.saveTask();
+            }
+        });
+    }
 
-        ActivityUtils.replaceFragmentInActivity(getSupportFragmentManager(),
-                addEditTaskFragment, R.id.contentFrame);
+    private void setupActionBar() {
+        ActionBar actionBar = getSupportActionBar();
+        if (actionBar == null) {
+            return;
+        }
+        if (getIntent().getStringExtra(AddEditTaskActivity.ARGUMENT_EDIT_TASK_ID) != null) {
+            actionBar.setTitle(R.string.edit_task);
+        } else {
+            actionBar.setTitle(R.string.add_task);
+        }
+    }
 
-        subscribeToNavigationChanges();
+    private void loadData() {
+        // Add or edit an existing task?
+        if (getIntent().getStringExtra(AddEditTaskActivity.ARGUMENT_EDIT_TASK_ID) != null) {
+            mViewModel.start(getIntent().getStringExtra(AddEditTaskActivity.ARGUMENT_EDIT_TASK_ID));
+        } else {
+            mViewModel.start(null);
+        }
     }
 
     private void subscribeToNavigationChanges() {
@@ -89,25 +147,6 @@ public class AddEditTaskActivity extends AppCompatActivity implements AddEditTas
     public static AddEditTaskViewModel obtainViewModel(FragmentActivity activity) {
         // Use a Factory to inject dependencies into the ViewModel
         ViewModelFactory factory = ViewModelFactory.getInstance(activity.getApplication());
-
-        return ViewModelProviders.of(activity, factory).get(AddEditTaskViewModel.class);
-    }
-
-    @NonNull
-    private AddEditTaskFragment obtainViewFragment() {
-        // View Fragment
-        AddEditTaskFragment addEditTaskFragment = (AddEditTaskFragment) getSupportFragmentManager()
-                .findFragmentById(R.id.contentFrame);
-
-        if (addEditTaskFragment == null) {
-            addEditTaskFragment = AddEditTaskFragment.newInstance();
-
-            // Send the task ID to the fragment
-            Bundle bundle = new Bundle();
-            bundle.putString(AddEditTaskFragment.ARGUMENT_EDIT_TASK_ID,
-                    getIntent().getStringExtra(AddEditTaskFragment.ARGUMENT_EDIT_TASK_ID));
-            addEditTaskFragment.setArguments(bundle);
-        }
-        return addEditTaskFragment;
+        return new ViewModelProvider(activity, factory).get(AddEditTaskViewModel.class);
     }
 }
