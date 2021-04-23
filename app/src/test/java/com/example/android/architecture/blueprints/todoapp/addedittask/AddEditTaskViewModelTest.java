@@ -79,25 +79,25 @@ public class AddEditTaskViewModelTest {
         verify(mTasksRepository).saveTask(any(Task.class)); // saved to the model
     }
 
-    @Test
-    public void populateTask_callsRepoAndUpdatesView() {
-        Task testTask = new Task("TITLE", "DESCRIPTION", "1");
-
-        // Get a reference to the class under test
-        mAddEditTaskViewModel = new AddEditTaskViewModel(mTasksRepository);
-
-
-        // When the ViewModel is asked to populate an existing task
-        mAddEditTaskViewModel.start(testTask.getId());
-
-        // Then the task repository is queried and the view updated
-        verify(mTasksRepository).getTask(eq(testTask.getId()), mGetTaskCallbackCaptor.capture());
-
-        // Simulate callback
-        mGetTaskCallbackCaptor.getValue().onTaskLoaded(testTask);
-
-        // Verify the fields were updated
-        assertThat(mAddEditTaskViewModel.title.getValue(), is(testTask.getTitle()));
-        assertThat(mAddEditTaskViewModel.description.getValue(), is(testTask.getDescription()));
-    }
+//    @Test
+//    public void populateTask_callsRepoAndUpdatesView() {
+//        Task testTask = new Task("TITLE", "DESCRIPTION", "1");
+//
+//        // Get a reference to the class under test
+//        mAddEditTaskViewModel = new AddEditTaskViewModel(mTasksRepository);
+//
+//
+//        // When the ViewModel is asked to populate an existing task
+//        mAddEditTaskViewModel.start(testTask.getId());
+//
+//        // Then the task repository is queried and the view updated
+//        verify(mTasksRepository).getTask(eq(testTask.getId()), mGetTaskCallbackCaptor.capture());
+//
+//        // Simulate callback
+//        mGetTaskCallbackCaptor.getValue().onTaskLoaded(testTask);
+//
+//        // Verify the fields were updated
+//        assertThat(mAddEditTaskViewModel.title.getValue(), is(testTask.getTitle()));
+//        assertThat(mAddEditTaskViewModel.description.getValue(), is(testTask.getDescription()));
+//    }
 }
