@@ -16,6 +16,14 @@
 
 package com.example.android.architecture.blueprints.todoapp.tasks;
 
+import androidx.arch.core.util.Function;
+import androidx.databinding.BaseObservable;
+import androidx.databinding.Bindable;
+import androidx.lifecycle.LiveData;
+import androidx.lifecycle.MutableLiveData;
+import androidx.lifecycle.Transformations;
+import androidx.lifecycle.ViewModel;
+
 import com.example.android.architecture.blueprints.todoapp.Event;
 import com.example.android.architecture.blueprints.todoapp.R;
 import com.example.android.architecture.blueprints.todoapp.addedittask.AddEditTaskActivity;
@@ -27,13 +35,10 @@ import com.example.android.architecture.blueprints.todoapp.taskdetail.TaskDetail
 import java.util.ArrayList;
 import java.util.List;
 
-import androidx.arch.core.util.Function;
-import androidx.databinding.BaseObservable;
-import androidx.databinding.Bindable;
-import androidx.lifecycle.LiveData;
-import androidx.lifecycle.MutableLiveData;
-import androidx.lifecycle.Transformations;
-import androidx.lifecycle.ViewModel;
+import io.reactivex.SingleObserver;
+import io.reactivex.android.schedulers.AndroidSchedulers;
+import io.reactivex.disposables.Disposable;
+import io.reactivex.schedulers.Schedulers;
 
 
 /**
@@ -225,54 +230,60 @@ public class TasksViewModel extends ViewModel {
      * @param showLoadingUI Pass in true to display a loading icon in the UI
      */
     private void loadTasks(boolean forceUpdate, final boolean showLoadingUI) {
-        if (showLoadingUI) {
-            mDataLoading.setValue(true);
-        }
         if (forceUpdate) {
-
             mTasksRepository.refreshTasks();
         }
 
-        mTasksRepository.getTasks(new TasksDataSource.LoadTasksCallback() {
-            @Override
-            public void onTasksLoaded(List<Task> tasks) {
-                List<Task> tasksToShow = new ArrayList<>();
-
-                // We filter the tasks based on the requestType
-                for (Task task : tasks) {
-                    switch (mCurrentFiltering) {
-                        case ALL_TASKS:
-                            tasksToShow.add(task);
-                            break;
-                        case ACTIVE_TASKS:
-                            if (task.isActive()) {
-                                tasksToShow.add(task);
-                            }
-                            break;
-                        case COMPLETED_TASKS:
-                            if (task.isCompleted()) {
-                                tasksToShow.add(task);
-                            }
-                            break;
-                        default:
-                            tasksToShow.add(task);
-                            break;
+        mTasksRepository.getTasks()
+                .subscribeOn(Schedulers.io())
+                .observeOn(AndroidSchedulers.mainThread())
+                .subscribe(new SingleObserver<List<Task>>() {
+                    @Override
+                    public void onSubscribe(Disposable d) {
+                        if (showLoadingUI) {
+                            mDataLoading.setValue(true);
+                        }
                     }
-                }
-                if (showLoadingUI) {
-                    mDataLoading.setValue(false);
-                }
-                mIsDataLoadingError.setValue(false);
 
-                List<Task> itemsValue = new ArrayList<>(tasksToShow);
-                mItems.setValue(itemsValue);
-            }
+                    @Override
+                    public void onSuccess(List<Task> tasks) {
+                        List<Task> tasksToShow = new ArrayList<>();
 
-            @Override
-            public void onDataNotAvailable() {
-                mIsDataLoadingError.setValue(true);
-            }
-        });
+                        // We filter the tasks based on the requestType
+                        for (Task task : tasks) {
+                            switch (mCurrentFiltering) {
+                                case ALL_TASKS:
+                                    tasksToShow.add(task);
+                                    break;
+                                case ACTIVE_TASKS:
+                                    if (task.isActive()) {
+                                        tasksToShow.add(task);
+                                    }
+                                    break;
+                                case COMPLETED_TASKS:
+                                    if (task.isCompleted()) {
+                                        tasksToShow.add(task);
+                                    }
+                                    break;
+                                default:
+                                    tasksToShow.add(task);
+                                    break;
+                            }
+                        }
+                        if (showLoadingUI) {
+                            mDataLoading.setValue(false);
+                        }
+                        mIsDataLoadingError.setValue(false);
+
+                        List<Task> itemsValue = new ArrayList<>(tasksToShow);
+                        mItems.setValue(itemsValue);
+                    }
+
+                    @Override
+                    public void onError(Throwable e) {
+                        mIsDataLoadingError.setValue(true);
+                    }
+                });
     }
 
 }

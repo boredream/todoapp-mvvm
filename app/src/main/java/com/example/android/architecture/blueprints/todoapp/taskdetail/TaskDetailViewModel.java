@@ -16,13 +16,6 @@
 
 package com.example.android.architecture.blueprints.todoapp.taskdetail;
 
-import com.example.android.architecture.blueprints.todoapp.Event;
-import com.example.android.architecture.blueprints.todoapp.R;
-import com.example.android.architecture.blueprints.todoapp.data.Task;
-import com.example.android.architecture.blueprints.todoapp.data.source.TasksDataSource;
-import com.example.android.architecture.blueprints.todoapp.data.source.TasksRepository;
-import com.example.android.architecture.blueprints.todoapp.tasks.TasksFragment;
-
 import androidx.annotation.Nullable;
 import androidx.annotation.StringRes;
 import androidx.arch.core.util.Function;
@@ -31,11 +24,13 @@ import androidx.lifecycle.MutableLiveData;
 import androidx.lifecycle.Transformations;
 import androidx.lifecycle.ViewModel;
 
+import com.example.android.architecture.blueprints.todoapp.Event;
+import com.example.android.architecture.blueprints.todoapp.R;
+import com.example.android.architecture.blueprints.todoapp.data.Task;
+import com.example.android.architecture.blueprints.todoapp.data.source.TasksDataSource;
+import com.example.android.architecture.blueprints.todoapp.data.source.TasksRepository;
 
-/**
- * Listens to user actions from the list item in ({@link TasksFragment}) and redirects them to the
- * Fragment's actions listener.
- */
+
 public class TaskDetailViewModel extends ViewModel implements TasksDataSource.GetTaskCallback {
 
     private final MutableLiveData<Task> mTask = new MutableLiveData<>();
@@ -118,7 +113,8 @@ public class TaskDetailViewModel extends ViewModel implements TasksDataSource.Ge
     public void start(String taskId) {
         if (taskId != null) {
             mDataLoading.setValue(true);
-            mTasksRepository.getTask(taskId, this);
+//            mTasksRepository.getTask(taskId, this);
+            // TODO: chunyang 4/22/21
         }
     }
 

@@ -39,8 +39,9 @@ public class Injection {
     public static TasksRepository provideTasksRepository(@NonNull Context context) {
         checkNotNull(context);
         ToDoDatabase database = ToDoDatabase.getInstance(context);
-        return TasksRepository.getInstance(FakeTasksRemoteDataSource.getInstance(),
-                TasksLocalDataSource.getInstance(new AppExecutors(),
-                        database.taskDao()));
+        return TasksRepository.getInstance(database.taskDao());
+        // return TasksRepository.getInstance(FakeTasksRemoteDataSource.getInstance(),
+        //                TasksLocalDataSource.getInstance(new AppExecutors(),
+        //                        database.taskDao()));
     }
 }

@@ -82,8 +82,8 @@ public class TasksViewModelTest {
 
         setupContext();
 
-        // Get a reference to the class under test
-        mTasksViewModel = new TasksViewModel(mTasksRepository);
+        // Get a reference to the class under test FIXME
+//        mTasksViewModel = new TasksViewModel(mTasksRepository);
 
         // We initialise the tasks to 3, with one active and two completed
         TASKS = Lists.newArrayList(new Task("Title1", "Description1"),

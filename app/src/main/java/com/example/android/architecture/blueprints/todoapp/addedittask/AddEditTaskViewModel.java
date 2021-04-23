@@ -32,9 +32,7 @@ import androidx.lifecycle.ViewModel;
  * ViewModel for the Add/Edit screen.
  * <p>
  * This ViewModel only exposes {@link ObservableField}s, so it doesn't need to extend
- * {@link androidx.databinding.BaseObservable} and updates are notified automatically. See
- * {@link com.example.android.architecture.blueprints.todoapp.statistics.StatisticsViewModel} for
- * how to deal with more complex scenarios.
+ * {@link androidx.databinding.BaseObservable} and updates are notified automatically.
  */
 public class AddEditTaskViewModel extends ViewModel implements TasksDataSource.GetTaskCallback {
 
@@ -83,7 +81,8 @@ public class AddEditTaskViewModel extends ViewModel implements TasksDataSource.G
         mIsNewTask = false;
         dataLoading.setValue(true);
 
-        mTasksRepository.getTask(taskId, this);
+//        mTasksRepository.getTask(taskId, this);
+        // FIXME: 4/22/21 
     }
 
     @Override
