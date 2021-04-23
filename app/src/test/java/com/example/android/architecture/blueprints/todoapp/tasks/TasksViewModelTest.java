@@ -107,9 +107,7 @@ public class TasksViewModelTest {
     }
 
     @Test
-    public void loadAllTasksFromRepository_dataLoaded() {
-        // Given an initialized TasksViewModel with initialized tasks
-        // When loading of Tasks is requested
+    public void loadAllTasksFromRepository() {
         mTasksViewModel.setFiltering(TasksFilterType.ALL_TASKS);
 
         when(mTasksRepository.getTasks()).thenReturn(Single.just(TASKS));
@@ -118,46 +116,34 @@ public class TasksViewModelTest {
 
         // And data loaded
         assertFalse(mTasksViewModel.getItems().getValue().isEmpty());
-        assertTrue(mTasksViewModel.getItems().getValue().size() == 3);
+        assertEquals(3, mTasksViewModel.getItems().getValue().size());
     }
 
-//    @Test
-//    public void loadActiveTasksFromRepositoryAndLoadIntoView() {
-//        // Given an initialized TasksViewModel with initialized tasks
-//        // When loading of Tasks is requested
-//        mTasksViewModel.setFiltering(TasksFilterType.ACTIVE_TASKS);
-//        mTasksViewModel.loadTasks(true);
-//
-//        // Callback is captured and invoked with stubbed tasks
-//        verify(mTasksRepository).getTasks(mLoadTasksCallbackCaptor.capture());
-//        mLoadTasksCallbackCaptor.getValue().onTasksLoaded(TASKS);
-//
-//        // Then progress indicator is hidden
-//        assertFalse(mTasksViewModel.isDataLoading().getValue());
-//
-//        // And data loaded
-//        assertFalse(mTasksViewModel.getItems().getValue().isEmpty());
-//        assertTrue(mTasksViewModel.getItems().getValue().size() == 1);
-//    }
+    @Test
+    public void loadActiveTasksFromRepository() {
+        mTasksViewModel.setFiltering(TasksFilterType.ACTIVE_TASKS);
 
-//    @Test
-//    public void loadCompletedTasksFromRepositoryAndLoadIntoView() {
-//        // Given an initialized TasksViewModel with initialized tasks
-//        // When loading of Tasks is requested
-//        mTasksViewModel.setFiltering(TasksFilterType.COMPLETED_TASKS);
-//        mTasksViewModel.loadTasks(true);
-//
-//        // Callback is captured and invoked with stubbed tasks
-//        verify(mTasksRepository).getTasks(mLoadTasksCallbackCaptor.capture());
-//        mLoadTasksCallbackCaptor.getValue().onTasksLoaded(TASKS);
-//
-//        // Then progress indicator is hidden
-//        assertFalse(mTasksViewModel.isDataLoading().getValue());
-//
-//        // And data loaded
-//        assertFalse(mTasksViewModel.getItems().getValue().isEmpty());
-//        assertTrue(mTasksViewModel.getItems().getValue().size() == 2);
-//    }
+        when(mTasksRepository.getTasks()).thenReturn(Single.just(TASKS));
+
+        mTasksViewModel.loadTasks(true);
+
+        // And data loaded
+        assertFalse(mTasksViewModel.getItems().getValue().isEmpty());
+        assertEquals(1, mTasksViewModel.getItems().getValue().size());
+    }
+
+    @Test
+    public void loadCompletedTasksFromRepositoryAndLoadIntoView() {
+        mTasksViewModel.setFiltering(TasksFilterType.COMPLETED_TASKS);
+
+        when(mTasksRepository.getTasks()).thenReturn(Single.just(TASKS));
+
+        mTasksViewModel.loadTasks(true);
+
+        // And data loaded
+        assertFalse(mTasksViewModel.getItems().getValue().isEmpty());
+        assertEquals(2, mTasksViewModel.getItems().getValue().size());
+    }
 
     @SuppressWarnings("unchecked")
     @Test
@@ -166,19 +152,21 @@ public class TasksViewModelTest {
         mTasksViewModel.addNewTask();
 
         // Then the event is triggered
-        Event<Object> value = LiveDataTestUtil.getValue(mTasksViewModel.getNewTaskEvent());
+        Event<Object> value = mTasksViewModel.getNewTaskEvent().getValue();
         assertNotNull(value.getContentIfNotHandled());
     }
 
-//    @Test
-//    public void clearCompletedTasks_ClearsTasks() {
-//        // When completed tasks are cleared
-//        mTasksViewModel.clearCompletedTasks();
-//
-//        // Then repository is called and the view is notified
-//        verify(mTasksRepository).clearCompletedTasks();
-//        verify(mTasksRepository).getTasks(any(LoadTasksCallback.class));
-//    }
+    @Test
+    public void clearCompletedTasks_ClearsTasks() {
+        // TODO: chunyang 4/23/21 NPE ?
+
+        // When completed tasks are cleared
+        mTasksViewModel.clearCompletedTasks();
+
+        // Then repository is called and the view is notified
+        verify(mTasksRepository).clearCompletedTasks();
+        verify(mTasksRepository).getTasks();
+    }
 
     @Test
     public void handleActivityResult_editOK() throws InterruptedException {

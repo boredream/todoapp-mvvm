@@ -235,8 +235,6 @@ public class TasksViewModel extends ViewModel {
         }
 
         mTasksRepository.getTasks()
-                .subscribeOn(Schedulers.io())
-                .observeOn(AndroidSchedulers.mainThread())
                 .subscribe(new SingleObserver<List<Task>>() {
                     @Override
                     public void onSubscribe(Disposable d) {

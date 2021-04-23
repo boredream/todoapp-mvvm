@@ -28,6 +28,8 @@ import java.util.concurrent.TimeUnit;
 import io.reactivex.Single;
 import io.reactivex.SingleEmitter;
 import io.reactivex.SingleOnSubscribe;
+import io.reactivex.android.schedulers.AndroidSchedulers;
+import io.reactivex.schedulers.Schedulers;
 
 /**
  * 实际开发中简化只用远程数据（用db+延迟模拟接口获取）
@@ -67,7 +69,9 @@ public class TasksRepository {
                 EspressoIdlingResource.decrement(); // Set app as idle.
                 emitter.onSuccess(mTasksDao.getTasks());
             }
-        }).delay(SERVICE_LATENCY_IN_MILLIS, TimeUnit.MILLISECONDS);
+        }).delay(SERVICE_LATENCY_IN_MILLIS, TimeUnit.MILLISECONDS)
+                .subscribeOn(Schedulers.io())
+                .observeOn(AndroidSchedulers.mainThread());
     }
 
     public Single<String> saveTask(@NonNull final Task task) {
