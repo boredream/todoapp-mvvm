@@ -22,13 +22,13 @@ import android.view.ViewGroup;
 import android.widget.BaseAdapter;
 import android.widget.CheckBox;
 
+import androidx.databinding.DataBindingUtil;
+import androidx.lifecycle.LifecycleOwner;
+
 import com.example.android.architecture.blueprints.todoapp.data.Task;
 import com.example.android.architecture.blueprints.todoapp.databinding.TaskItemBinding;
 
 import java.util.List;
-
-import androidx.databinding.DataBindingUtil;
-import androidx.lifecycle.LifecycleOwner;
 
 
 public class TasksAdapter extends BaseAdapter {
@@ -40,7 +40,7 @@ public class TasksAdapter extends BaseAdapter {
     private LifecycleOwner mLifecycleOwner;
 
     public TasksAdapter(List<Task> tasks,
-            TasksViewModel tasksViewModel, LifecycleOwner activity) {
+                        TasksViewModel tasksViewModel, LifecycleOwner activity) {
         mTasksViewModel = tasksViewModel;
         setList(tasks);
         mLifecycleOwner = activity;
@@ -83,7 +83,7 @@ public class TasksAdapter extends BaseAdapter {
         TaskItemUserActionsListener userActionsListener = new TaskItemUserActionsListener() {
             @Override
             public void onCompleteChanged(Task task, View v) {
-                boolean checked = ((CheckBox)v).isChecked();
+                boolean checked = ((CheckBox) v).isChecked();
                 mTasksViewModel.completeTask(task, checked);
             }
 

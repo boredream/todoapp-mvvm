@@ -30,13 +30,14 @@ import com.example.android.architecture.blueprints.todoapp.BaseActivity;
 import com.example.android.architecture.blueprints.todoapp.R;
 import com.example.android.architecture.blueprints.todoapp.ScrollChildSwipeRefreshLayout;
 import com.example.android.architecture.blueprints.todoapp.addedittask.AddEditTaskActivity;
+import com.example.android.architecture.blueprints.todoapp.data.Task;
 import com.example.android.architecture.blueprints.todoapp.databinding.TasksActBinding;
 import com.example.android.architecture.blueprints.todoapp.taskdetail.TaskDetailActivity;
 
 import java.util.ArrayList;
 
 
-public class TasksActivity extends BaseActivity<TasksViewModel, TasksActBinding> implements TaskItemNavigator {
+public class TasksActivity extends BaseActivity<TasksViewModel, TasksActBinding> {
 
     private TasksAdapter mListAdapter;
 
@@ -46,7 +47,7 @@ public class TasksActivity extends BaseActivity<TasksViewModel, TasksActBinding>
     }
 
     @Override
-    protected Class<TasksViewModel> genViewModel() {
+    protected Class<TasksViewModel> getViewModelClass() {
         return TasksViewModel.class;
     }
 
@@ -59,20 +60,10 @@ public class TasksActivity extends BaseActivity<TasksViewModel, TasksActBinding>
         setupRefreshLayout();
 
         // Subscribe to "open task" event
-        mViewModel.getOpenTaskEvent().observe(this, taskIdEvent -> {
-            String taskId = taskIdEvent.getContentIfNotHandled();
-            if (taskId != null) {
-                openTaskDetails(taskId);
-            }
-
-        });
+        addSubject(mViewModel.getOpenTaskSubject().subscribe(this::openTaskDetails));
 
         // Subscribe to "new task" event
-        mViewModel.getNewTaskEvent().observe(this, taskIdEvent -> {
-            if (taskIdEvent.getContentIfNotHandled() != null) {
-                addNewTask();
-            }
-        });
+        addSubject(mViewModel.getNewTaskSubject().subscribe(o -> addNewTask()));
 
         mViewModel.start();
     }
@@ -151,7 +142,6 @@ public class TasksActivity extends BaseActivity<TasksViewModel, TasksActBinding>
         mViewModel.handleActivityResult(requestCode, resultCode);
     }
 
-    @Override
     public void openTaskDetails(String taskId) {
         Intent intent = new Intent(this, TaskDetailActivity.class);
         intent.putExtra(TaskDetailActivity.EXTRA_TASK_ID, taskId);

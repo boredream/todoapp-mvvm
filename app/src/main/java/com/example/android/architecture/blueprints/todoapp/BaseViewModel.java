@@ -42,7 +42,7 @@ public class BaseViewModel extends ViewModel {
     }
 
     @NonNull
-    public Observable<Integer> getToastSubject() {
+    public PublishSubject<Integer> getToastSubject() {
         return mToastSubject;
     }
 }

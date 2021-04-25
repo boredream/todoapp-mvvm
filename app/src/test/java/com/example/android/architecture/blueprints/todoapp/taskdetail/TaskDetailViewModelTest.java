@@ -20,23 +20,19 @@ package com.example.android.architecture.blueprints.todoapp.taskdetail;
 import android.app.Application;
 import android.content.res.Resources;
 
-import com.example.android.architecture.blueprints.todoapp.Event;
-import com.example.android.architecture.blueprints.todoapp.LiveDataTestUtil;
 import com.example.android.architecture.blueprints.todoapp.R;
 import com.example.android.architecture.blueprints.todoapp.data.Task;
-import com.example.android.architecture.blueprints.todoapp.data.source.TasksDataSource;
 import com.example.android.architecture.blueprints.todoapp.data.source.TasksRepository;
 
-import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
-import org.mockito.ArgumentCaptor;
-import org.mockito.Captor;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 
 import androidx.arch.core.executor.testing.InstantTaskExecutorRule;
+
+import io.reactivex.Single;
 
 import static junit.framework.Assert.assertEquals;
 import static junit.framework.Assert.assertFalse;
@@ -53,72 +49,69 @@ import static org.mockito.Mockito.when;
  */
 public class TaskDetailViewModelTest {
 
-//    // Executes each task synchronously using Architecture Components.
-//    @Rule
-//    public InstantTaskExecutorRule instantExecutorRule = new InstantTaskExecutorRule();
-//
-//    private static final String TITLE_TEST = "title";
-//
-//    private static final String DESCRIPTION_TEST = "description";
-//
-//    private static final String NO_DATA_STRING = "NO_DATA_STRING";
-//
-//    private static final String NO_DATA_DESC_STRING = "NO_DATA_DESC_STRING";
-//
-//    @Mock
-//    private TasksRepository mTasksRepository;
-//
-//    @Mock
-//    private Application mContext;
-//
-//    @Captor
-//    private ArgumentCaptor<TasksDataSource.GetTaskCallback> mGetTaskCallbackCaptor;
-//
-//    private TaskDetailViewModel mTaskDetailViewModel;
-//
-//    private Task mTask;
-//
-//    @Before
-//    public void setupTasksViewModel() {
-//        // Mockito has a very convenient way to inject mocks by using the @Mock annotation. To
-//        // inject the mocks in the test the initMocks method needs to be called.
-//        MockitoAnnotations.initMocks(this);
-//
-//        setupContext();
-//
-//        mTask = new Task(TITLE_TEST, DESCRIPTION_TEST);
-//
-//        // Get a reference to the class under test
-//        mTaskDetailViewModel = new TaskDetailViewModel(mTasksRepository);
-//    }
-//
-//    private void setupContext() {
-//        when(mContext.getApplicationContext()).thenReturn(mContext);
-//        when(mContext.getString(R.string.no_data)).thenReturn(NO_DATA_STRING);
-//        when(mContext.getString(R.string.no_data_description)).thenReturn(NO_DATA_DESC_STRING);
-//        when(mContext.getResources()).thenReturn(mock(Resources.class));
-//    }
-//
-//    @Test
-//    public void getActiveTaskFromRepositoryAndLoadIntoView() {
-//        setupViewModelRepositoryCallback();
-//
-//        // Then verify that the view was notified
-//        assertEquals(mTaskDetailViewModel.getTask().getValue().getTitle(), mTask.getTitle());
-//        assertEquals(mTaskDetailViewModel.getTask().getValue().getDescription(), mTask.getDescription());
-//    }
-//
-//    @Test
-//    public void deleteTask() {
-//        setupViewModelRepositoryCallback();
-//
-//        // When the deletion of a task is requested
-//        mTaskDetailViewModel.deleteTask();
-//
-//        // Then the repository is notified
-//        verify(mTasksRepository).deleteTask(mTask.getId());
-//    }
-//
+    // Executes each task synchronously using Architecture Components.
+    @Rule
+    public InstantTaskExecutorRule instantExecutorRule = new InstantTaskExecutorRule();
+
+    private static final String TITLE_TEST = "title";
+
+    private static final String DESCRIPTION_TEST = "description";
+
+    private static final String NO_DATA_STRING = "NO_DATA_STRING";
+
+    private static final String NO_DATA_DESC_STRING = "NO_DATA_DESC_STRING";
+
+    @Mock
+    private TasksRepository mTasksRepository;
+
+    @Mock
+    private Application mContext;
+
+    private TaskDetailViewModel mTaskDetailViewModel;
+
+    private Task mTask;
+
+    @Before
+    public void setupTasksViewModel() {
+        // Mockito has a very convenient way to inject mocks by using the @Mock annotation. To
+        // inject the mocks in the test the initMocks method needs to be called.
+        MockitoAnnotations.initMocks(this);
+
+        setupContext();
+
+        mTask = new Task(TITLE_TEST, DESCRIPTION_TEST);
+
+        // Get a reference to the class under test
+        mTaskDetailViewModel = new TaskDetailViewModel(mTasksRepository);
+    }
+
+    private void setupContext() {
+        when(mContext.getApplicationContext()).thenReturn(mContext);
+        when(mContext.getString(R.string.no_data)).thenReturn(NO_DATA_STRING);
+        when(mContext.getString(R.string.no_data_description)).thenReturn(NO_DATA_DESC_STRING);
+        when(mContext.getResources()).thenReturn(mock(Resources.class));
+    }
+
+    @Test
+    public void getActiveTaskFromRepositoryAndLoadIntoView() {
+        setupViewModelRepository();
+
+        // Then verify that the view was notified
+        assertEquals(mTaskDetailViewModel.getTask().getValue().getTitle(), mTask.getTitle());
+        assertEquals(mTaskDetailViewModel.getTask().getValue().getDescription(), mTask.getDescription());
+    }
+
+    @Test
+    public void deleteTask() {
+        setupViewModelRepository();
+
+        // When the deletion of a task is requested
+        mTaskDetailViewModel.deleteTask();
+
+        // Then the repository is notified
+        verify(mTasksRepository).deleteTask(mTask.getId());
+    }
+
 //    @Test
 //    public void completeTask() throws InterruptedException {
 //        setupViewModelRepositoryCallback();
@@ -177,14 +170,14 @@ public class TaskDetailViewModelTest {
 //        // Then task detail UI is shown
 //        assertThat(mTaskDetailViewModel.getTask().getValue(), is(nullValue()));
 //    }
-//
-//    private void setupViewModelRepositoryCallback() {
-//        // Given an initialized ViewModel with an active task
-//        mTaskDetailViewModel.start(mTask.getId());
-//
-//        // Use a captor to get a reference for the callback.
-//        verify(mTasksRepository).getTask(eq(mTask.getId()), mGetTaskCallbackCaptor.capture());
-//
-//        mGetTaskCallbackCaptor.getValue().onTaskLoaded(mTask); // Trigger callback
-//    }
+
+    private void setupViewModelRepository() {
+        when(mTasksRepository.getTask(mTask.getId())).thenReturn(Single.just(mTask));
+
+        // Given an initialized ViewModel with an active task
+        mTaskDetailViewModel.start(mTask.getId());
+
+        // Use a captor to get a reference for the callback.
+        mTasksRepository.getTask(mTask.getId()).test().assertSubscribed();
+    }
 }

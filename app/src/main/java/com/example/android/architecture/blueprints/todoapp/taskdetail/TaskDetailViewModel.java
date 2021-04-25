@@ -16,6 +16,8 @@
 
 package com.example.android.architecture.blueprints.todoapp.taskdetail;
 
+import android.annotation.SuppressLint;
+
 import androidx.annotation.Nullable;
 import androidx.arch.core.util.Function;
 import androidx.lifecycle.LiveData;
@@ -26,11 +28,13 @@ import com.example.android.architecture.blueprints.todoapp.BaseViewModel;
 import com.example.android.architecture.blueprints.todoapp.Event;
 import com.example.android.architecture.blueprints.todoapp.R;
 import com.example.android.architecture.blueprints.todoapp.data.Task;
-import com.example.android.architecture.blueprints.todoapp.data.source.TasksDataSource;
 import com.example.android.architecture.blueprints.todoapp.data.source.TasksRepository;
 
+import io.reactivex.SingleObserver;
+import io.reactivex.disposables.Disposable;
 
-public class TaskDetailViewModel extends BaseViewModel implements TasksDataSource.GetTaskCallback {
+
+public class TaskDetailViewModel extends BaseViewModel {
 
     private final MutableLiveData<Task> mTask = new MutableLiveData<>();
 
@@ -79,7 +83,7 @@ public class TaskDetailViewModel extends BaseViewModel implements TasksDataSourc
         return mTask;
     }
 
-    public LiveData<Boolean> getIsDataAvailable() {
+    public LiveData<Boolean> isDataAvailable() {
         return mIsDataAvailable;
     }
 
@@ -101,36 +105,31 @@ public class TaskDetailViewModel extends BaseViewModel implements TasksDataSourc
         }
     }
 
+    @SuppressLint("CheckResult")
     public void start(String taskId) {
-        if (taskId != null) {
-            mDataLoading.setValue(true);
-//            mTasksRepository.getTask(taskId, this);
-            // TODO: chunyang 4/22/21
-        }
-    }
+        if(taskId == null) return;
 
-    public void setTask(Task task) {
-        this.mTask.setValue(task);
-        mIsDataAvailable.setValue(task != null);
-    }
+        mTasksRepository.getTask(taskId)
+                .subscribe(new SingleObserver<Task>() {
+                    @Override
+                    public void onSubscribe(Disposable d) {
+                        mDataLoading.setValue(true);
+                    }
 
-    @Override
-    public void onTaskLoaded(Task task) {
-        setTask(task);
-        mDataLoading.setValue(false);
-    }
+                    @Override
+                    public void onSuccess(Task task) {
+                        mTask.setValue(task);
+                        mIsDataAvailable.setValue(task != null);
+                        mDataLoading.setValue(false);
+                    }
 
-    @Override
-    public void onDataNotAvailable() {
-        mTask.setValue(null);
-        mDataLoading.setValue(false);
-        mIsDataAvailable.setValue(false);
-    }
-
-    public void onRefresh() {
-        if (mTask.getValue() != null) {
-            start(mTask.getValue().getId());
-        }
+                    @Override
+                    public void onError(Throwable e) {
+                        mTask.setValue(null);
+                        mDataLoading.setValue(false);
+                        mIsDataAvailable.setValue(false);
+                    }
+                });
     }
 
     @Nullable

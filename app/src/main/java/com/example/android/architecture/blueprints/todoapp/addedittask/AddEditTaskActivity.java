@@ -53,7 +53,7 @@ public class AddEditTaskActivity extends BaseActivity<AddEditTaskViewModel, Addt
     }
 
     @Override
-    protected Class<AddEditTaskViewModel> genViewModel() {
+    protected Class<AddEditTaskViewModel> getViewModelClass() {
         return AddEditTaskViewModel.class;
     }
 

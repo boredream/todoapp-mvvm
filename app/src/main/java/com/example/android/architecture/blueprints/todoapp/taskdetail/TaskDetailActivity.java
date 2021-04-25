@@ -18,34 +18,34 @@ package com.example.android.architecture.blueprints.todoapp.taskdetail;
 
 import android.content.Intent;
 import android.os.Bundle;
+import android.view.Menu;
+import android.view.MenuItem;
+import android.widget.CheckBox;
 
-import androidx.annotation.NonNull;
 import androidx.appcompat.app.ActionBar;
 import androidx.appcompat.widget.Toolbar;
-import androidx.fragment.app.FragmentActivity;
 import androidx.lifecycle.Observer;
-import androidx.lifecycle.ViewModelProviders;
 
 import com.example.android.architecture.blueprints.todoapp.BaseActivity;
-import com.example.android.architecture.blueprints.todoapp.Event;
 import com.example.android.architecture.blueprints.todoapp.R;
-import com.example.android.architecture.blueprints.todoapp.ViewModelFactory;
-import com.example.android.architecture.blueprints.todoapp.databinding.TaskdetailFragBinding;
-import com.example.android.architecture.blueprints.todoapp.util.ActivityUtils;
+import com.example.android.architecture.blueprints.todoapp.addedittask.AddEditTaskActivity;
+import com.example.android.architecture.blueprints.todoapp.databinding.TaskdetailActBinding;
 
 import static com.example.android.architecture.blueprints.todoapp.addedittask.AddEditTaskActivity.ADD_EDIT_RESULT_OK;
-import static com.example.android.architecture.blueprints.todoapp.taskdetail.TaskDetailFragment.REQUEST_EDIT_TASK;
 
 /**
  * Displays task details screen.
  */
-public class TaskDetailActivity extends BaseActivity<TaskDetailViewModel, TaskdetailFragBinding> implements TaskDetailNavigator {
+public class TaskDetailActivity extends BaseActivity<TaskDetailViewModel, TaskdetailActBinding> {
 
     public static final String EXTRA_TASK_ID = "TASK_ID";
+    public static final int REQUEST_EDIT_TASK = 1;
 
     public static final int DELETE_RESULT_OK = RESULT_FIRST_USER + 2;
 
     public static final int EDIT_RESULT_OK = RESULT_FIRST_USER + 3;
+
+    private String taskId;
 
     @Override
     protected int getLayoutId() {
@@ -53,7 +53,7 @@ public class TaskDetailActivity extends BaseActivity<TaskDetailViewModel, Taskde
     }
 
     @Override
-    protected Class<TaskDetailViewModel> genViewModel() {
+    protected Class<TaskDetailViewModel> getViewModelClass() {
         return TaskDetailViewModel.class;
     }
 
@@ -62,35 +62,18 @@ public class TaskDetailActivity extends BaseActivity<TaskDetailViewModel, Taskde
         super.onCreate(savedInstanceState);
 
         setupToolbar();
-
-        TaskDetailFragment taskDetailFragment = findOrCreateViewFragment();
-
-        ActivityUtils.replaceFragmentInActivity(getSupportFragmentManager(),
-                taskDetailFragment, R.id.contentFrame);
-
+        setupTaskDetailUserActionsListener();
         subscribeToNavigationChanges();
-    }
 
-    @NonNull
-    private TaskDetailFragment findOrCreateViewFragment() {
-        // Get the requested task id
-        String taskId = getIntent().getStringExtra(EXTRA_TASK_ID);
+        mViewModel.isDataAvailable().observe(this, new Observer<Boolean>() {
+            @Override
+            public void onChanged(Boolean show) {
+                System.out.println("getIsDataAvailable = " + show);
+            }
+        });
 
-        TaskDetailFragment taskDetailFragment = (TaskDetailFragment) getSupportFragmentManager()
-                .findFragmentById(R.id.contentFrame);
-
-        if (taskDetailFragment == null) {
-            taskDetailFragment = TaskDetailFragment.newInstance(taskId);
-        }
-        return taskDetailFragment;
-    }
-
-    @NonNull
-    public static TaskDetailViewModel obtainViewModel(FragmentActivity activity) {
-        // Use a Factory to inject dependencies into the ViewModel
-        ViewModelFactory factory = ViewModelFactory.getInstance(activity.getApplication());
-
-        return ViewModelProviders.of(activity, factory).get(TaskDetailViewModel.class);
+        taskId = getIntent().getStringExtra(EXTRA_TASK_ID);
+        mViewModel.start(taskId);
     }
 
     private void setupToolbar() {
@@ -101,24 +84,38 @@ public class TaskDetailActivity extends BaseActivity<TaskDetailViewModel, Taskde
         ab.setDisplayShowHomeEnabled(true);
     }
 
+    private void setupTaskDetailUserActionsListener() {
+        mBinding.setListener(v -> mViewModel.setCompleted(((CheckBox) v).isChecked()));
+    }
+
     private void subscribeToNavigationChanges() {
         // The activity observes the navigation commands in the ViewModel
-        mViewModel.getEditTaskCommand().observe(this, new Observer<Event<Object>>() {
-            @Override
-            public void onChanged(Event<Object> taskEvent) {
-                if (taskEvent.getContentIfNotHandled() != null) {
-                    TaskDetailActivity.this.onStartEditTask();
-                }
+        mViewModel.getEditTaskCommand().observe(this, taskEvent -> {
+            if (taskEvent.getContentIfNotHandled() != null) {
+                TaskDetailActivity.this.onStartEditTask(taskId);
             }
         });
-        mViewModel.getDeleteTaskCommand().observe(this, new Observer<Event<Object>>() {
-            @Override
-            public void onChanged(Event<Object> taskEvent) {
-                if (taskEvent.getContentIfNotHandled() != null) {
-                    TaskDetailActivity.this.onTaskDeleted();
-                }
+        mViewModel.getDeleteTaskCommand().observe(this, taskEvent -> {
+            if (taskEvent.getContentIfNotHandled() != null) {
+                TaskDetailActivity.this.onTaskDeleted();
             }
         });
+    }
+
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+        switch (item.getItemId()) {
+            case R.id.menu_delete:
+                mViewModel.deleteTask();
+                return true;
+        }
+        return false;
+    }
+
+    @Override
+    public boolean onCreateOptionsMenu(Menu menu) {
+        getMenuInflater().inflate(R.menu.taskdetail_fragment_menu, menu);
+        return true;
     }
 
     @Override
@@ -140,20 +137,16 @@ public class TaskDetailActivity extends BaseActivity<TaskDetailViewModel, Taskde
         return true;
     }
 
-    @Override
     public void onTaskDeleted() {
         setResult(DELETE_RESULT_OK);
         // If the task was deleted successfully, go back to the list.
         finish();
     }
 
-    @Override
-    public void onStartEditTask() {
-        // TODO: chunyang 4/23/21
-//        String taskId = getIntent().getStringExtra(EXTRA_TASK_ID);
-//        Intent intent = new Intent(this, AddEditTaskActivity.class);
-//        intent.putExtra(AddEditTaskFragment.ARGUMENT_EDIT_TASK_ID, taskId);
-//        startActivityForResult(intent, REQUEST_EDIT_TASK);
+    public void onStartEditTask(String taskId) {
+        Intent intent = new Intent(this, AddEditTaskActivity.class);
+        intent.putExtra(EXTRA_TASK_ID, taskId);
+        startActivityForResult(intent, REQUEST_EDIT_TASK);
     }
 
 }
