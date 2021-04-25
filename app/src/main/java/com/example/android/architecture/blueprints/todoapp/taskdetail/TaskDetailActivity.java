@@ -24,7 +24,6 @@ import android.widget.CheckBox;
 
 import androidx.appcompat.app.ActionBar;
 import androidx.appcompat.widget.Toolbar;
-import androidx.lifecycle.Observer;
 
 import com.example.android.architecture.blueprints.todoapp.BaseActivity;
 import com.example.android.architecture.blueprints.todoapp.R;
@@ -61,16 +60,10 @@ public class TaskDetailActivity extends BaseActivity<TaskDetailViewModel, Taskde
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
+        setupProgressDialog();
         setupToolbar();
         setupTaskDetailUserActionsListener();
         subscribeToNavigationChanges();
-
-        mViewModel.isDataAvailable().observe(this, new Observer<Boolean>() {
-            @Override
-            public void onChanged(Boolean show) {
-                System.out.println("getIsDataAvailable = " + show);
-            }
-        });
 
         taskId = getIntent().getStringExtra(EXTRA_TASK_ID);
         mViewModel.start(taskId);

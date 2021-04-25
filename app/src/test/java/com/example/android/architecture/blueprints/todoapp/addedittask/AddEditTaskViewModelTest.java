@@ -25,11 +25,16 @@ import org.junit.Rule;
 import org.junit.Test;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
+import org.reactivestreams.Publisher;
+import org.reactivestreams.Subscriber;
 
 import androidx.arch.core.executor.testing.InstantTaskExecutorRule;
 
+import io.reactivex.Completable;
 import io.reactivex.Single;
 import io.reactivex.observers.TestObserver;
+import io.reactivex.subjects.PublishSubject;
+import io.reactivex.subscribers.TestSubscriber;
 
 import static org.hamcrest.Matchers.is;
 import static org.junit.Assert.assertThat;

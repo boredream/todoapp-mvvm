@@ -74,13 +74,12 @@ public class AddEditTaskViewModel extends BaseViewModel {
         }
 
         mIsNewTask = false;
-        mDataLoading.setValue(true);
 
         mTasksRepository.getTask(taskId)
                 .subscribe(new SingleObserver<Task>() {
                     @Override
                     public void onSubscribe(Disposable d) {
-
+                        mDataLoading.setValue(true);
                     }
 
                     @Override
@@ -117,16 +116,18 @@ public class AddEditTaskViewModel extends BaseViewModel {
                 .subscribe(new SingleObserver<String>() {
                     @Override
                     public void onSubscribe(Disposable d) {
-
+                        mDataLoading.setValue(true);
                     }
 
                     @Override
                     public void onSuccess(String s) {
                         mTaskUpdated.onNext(mIsNewTask);
+                        mDataLoading.setValue(false);
                     }
 
                     @Override
                     public void onError(Throwable e) {
+                        mDataLoading.setValue(false);
                         String action = mIsNewTask ? "add" : "update";
                         mToastSubject.onNext(action + " error = " + e.getMessage());
                     }

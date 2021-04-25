@@ -1,5 +1,6 @@
 package com.example.android.architecture.blueprints.todoapp;
 
+import android.app.ProgressDialog;
 import android.os.Bundle;
 import android.widget.Toast;
 
@@ -32,7 +33,6 @@ abstract public class BaseActivity<VM extends BaseViewModel, BD extends ViewData
         mBinding = DataBindingUtil.setContentView(this, getLayoutId());
         ViewModelFactory factory = ViewModelFactory.getInstance(getApplication());
         mViewModel = new ViewModelProvider(this, factory).get(getViewModelClass());
-
         mBinding.setLifecycleOwner(this);
         mBinding.setVariable(BR.viewModel, mViewModel);
 
@@ -44,6 +44,20 @@ abstract public class BaseActivity<VM extends BaseViewModel, BD extends ViewData
     protected void onDestroy() {
         super.onDestroy();
         mDisposable.dispose();
+    }
+
+    @Deprecated
+    private ProgressDialog progressDialog;
+
+    @Deprecated
+    protected void setupProgressDialog() {
+        // 建议用progress bar嵌入式加到布局中
+        progressDialog = new ProgressDialog(this);
+        mViewModel.isDataLoading().observe(this, show -> {
+            System.out.println("show loading = " + show);
+            if (show && !progressDialog.isShowing()) progressDialog.show();
+            else if (!show && progressDialog.isShowing()) progressDialog.dismiss();
+        });
     }
 
     private Disposable setupToast() {

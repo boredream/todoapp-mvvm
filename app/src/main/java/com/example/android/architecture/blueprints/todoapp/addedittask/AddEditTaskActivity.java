@@ -35,6 +35,7 @@ public class AddEditTaskActivity extends BaseActivity<AddEditTaskViewModel, Addt
 
     public static final int ADD_EDIT_RESULT_OK = RESULT_FIRST_USER + 1;
     public static final String ARGUMENT_EDIT_TASK_ID = "taskId";
+    private String taskId;
 
     @Override
     public boolean onSupportNavigateUp() {
@@ -56,13 +57,15 @@ public class AddEditTaskActivity extends BaseActivity<AddEditTaskViewModel, Addt
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
+        taskId = getIntent().getStringExtra(AddEditTaskActivity.ARGUMENT_EDIT_TASK_ID);
+
+        setupProgressDialog();
         setupToolbar();
         setupFab();
         setupActionBar();
+        subscribeToNavigationChanges();
 
         loadData();
-
-        subscribeToNavigationChanges();
     }
 
     private void setupToolbar() {
@@ -85,7 +88,7 @@ public class AddEditTaskActivity extends BaseActivity<AddEditTaskViewModel, Addt
         if (actionBar == null) {
             return;
         }
-        if (getIntent().getStringExtra(AddEditTaskActivity.ARGUMENT_EDIT_TASK_ID) != null) {
+        if (taskId != null) {
             actionBar.setTitle(R.string.edit_task);
         } else {
             actionBar.setTitle(R.string.add_task);
@@ -93,12 +96,7 @@ public class AddEditTaskActivity extends BaseActivity<AddEditTaskViewModel, Addt
     }
 
     private void loadData() {
-        // Add or edit an existing task?
-        if (getIntent().getStringExtra(AddEditTaskActivity.ARGUMENT_EDIT_TASK_ID) != null) {
-            mViewModel.start(getIntent().getStringExtra(AddEditTaskActivity.ARGUMENT_EDIT_TASK_ID));
-        } else {
-            mViewModel.start(null);
-        }
+        mViewModel.start(getIntent().getStringExtra(taskId));
     }
 
     private void subscribeToNavigationChanges() {
