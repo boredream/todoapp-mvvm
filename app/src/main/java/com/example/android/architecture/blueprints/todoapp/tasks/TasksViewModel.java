@@ -130,7 +130,7 @@ public class TasksViewModel extends BaseViewModel {
 
     public void clearCompletedTasks() {
         mTasksRepository.clearCompletedTasks().subscribe();
-        mToastSubject.onNext(R.string.completed_tasks_cleared);
+        mToastSubject.onNext("Completed tasks cleared");
         loadTasks(false, false);
     }
 
@@ -138,10 +138,10 @@ public class TasksViewModel extends BaseViewModel {
         // Notify repository
         if (completed) {
             mTasksRepository.completeTask(task);
-            mToastSubject.onNext(R.string.task_marked_complete);
+            mToastSubject.onNext("Task marked complete");
         } else {
             mTasksRepository.activateTask(task);
-            mToastSubject.onNext(R.string.task_marked_active);
+            mToastSubject.onNext("Task marked active");
         }
     }
 
@@ -187,13 +187,13 @@ public class TasksViewModel extends BaseViewModel {
         if (AddEditTaskActivity.REQUEST_CODE == requestCode) {
             switch (resultCode) {
                 case TaskDetailActivity.EDIT_RESULT_OK:
-                    mToastSubject.onNext(R.string.successfully_saved_task_message);
+                    mToastSubject.onNext("TO-DO saved");
                     break;
                 case AddEditTaskActivity.ADD_EDIT_RESULT_OK:
-                    mToastSubject.onNext(R.string.successfully_added_task_message);
+                    mToastSubject.onNext("TO-DO added");
                     break;
                 case TaskDetailActivity.DELETE_RESULT_OK:
-                    mToastSubject.onNext(R.string.successfully_deleted_task_message);
+                    mToastSubject.onNext("Task was deleted");
                     break;
             }
         }

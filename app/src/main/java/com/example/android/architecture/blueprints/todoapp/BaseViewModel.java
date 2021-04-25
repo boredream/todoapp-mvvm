@@ -31,7 +31,7 @@ public class BaseViewModel extends ViewModel {
     protected final MutableLiveData<Boolean> mDataLoading = new MutableLiveData<>();
 
     // 事件用 subject，获取监听回调
-    protected final PublishSubject<Integer> mToastSubject;
+    protected final PublishSubject<String> mToastSubject;
 
     public BaseViewModel() {
         mToastSubject = PublishSubject.create();
@@ -42,7 +42,7 @@ public class BaseViewModel extends ViewModel {
     }
 
     @NonNull
-    public PublishSubject<Integer> getToastSubject() {
+    public PublishSubject<String> getToastSubject() {
         return mToastSubject;
     }
 }

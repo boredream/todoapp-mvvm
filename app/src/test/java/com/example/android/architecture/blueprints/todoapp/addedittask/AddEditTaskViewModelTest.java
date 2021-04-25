@@ -18,21 +18,18 @@ package com.example.android.architecture.blueprints.todoapp.addedittask;
 
 
 import com.example.android.architecture.blueprints.todoapp.data.Task;
-import com.example.android.architecture.blueprints.todoapp.data.source.TasksDataSource;
 import com.example.android.architecture.blueprints.todoapp.data.source.TasksRepository;
 
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
-import org.mockito.ArgumentCaptor;
-import org.mockito.Captor;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 
 import androidx.arch.core.executor.testing.InstantTaskExecutorRule;
 
 import io.reactivex.Single;
-import io.reactivex.subscribers.TestSubscriber;
+import io.reactivex.observers.TestObserver;
 
 import static org.hamcrest.Matchers.is;
 import static org.junit.Assert.assertThat;
@@ -55,6 +52,8 @@ public class AddEditTaskViewModelTest {
 
     private AddEditTaskViewModel mAddEditTaskViewModel;
 
+    private TestObserver<Boolean> mTaskUpdatedTestObserver;
+
     @Before
     public void setupAddEditTaskViewModel() {
         // Mockito has a very convenient way to inject mocks by using the @Mock annotation. To
@@ -63,24 +62,30 @@ public class AddEditTaskViewModelTest {
 
         // Get a reference to the class under test
         mAddEditTaskViewModel = new AddEditTaskViewModel(mTasksRepository);
+        mTaskUpdatedTestObserver = new TestObserver<>();
     }
 
     @Test
     public void saveNewTask() {
-        mAddEditTaskViewModel.start(null);
+        when(mTasksRepository.saveTask(any(Task.class))).thenReturn(Single.just("ok"));
+        mAddEditTaskViewModel.getTaskUpdatedEvent().subscribe(mTaskUpdatedTestObserver);
 
+        mAddEditTaskViewModel.start(null);
         mAddEditTaskViewModel.description.setValue("Some Task Description");
         mAddEditTaskViewModel.title.setValue("New Task Title");
         mAddEditTaskViewModel.saveTask();
 
-        verify(mTasksRepository).saveTask(any(Task.class));
+        mTaskUpdatedTestObserver.assertSubscribed();
+        mTaskUpdatedTestObserver.assertValue(true);
     }
 
     @Test
-    public void populateTask_callsRepoAndUpdatesView() {
+    public void populateTaskAndUpdate() {
+        when(mTasksRepository.saveTask(any(Task.class))).thenReturn(Single.just("ok"));
         Task testTask = new Task("TITLE", "DESCRIPTION", "1");
 
         // When the ViewModel is asked to populate an existing task
+        mAddEditTaskViewModel.getTaskUpdatedEvent().subscribe(mTaskUpdatedTestObserver);
         when(mTasksRepository.getTask(testTask.getId())).thenReturn(Single.just(testTask));
         mAddEditTaskViewModel.start(testTask.getId());
 
@@ -89,6 +94,16 @@ public class AddEditTaskViewModelTest {
 
         // Verify the fields were updated
         assertThat(mAddEditTaskViewModel.title.getValue(), is(testTask.getTitle()));
+        assertThat(mAddEditTaskViewModel.description.getValue(), is(testTask.getDescription()));
+
+        // Update
+        String updateStr = "Update Task Title";
+        mAddEditTaskViewModel.title.setValue(updateStr);
+        mAddEditTaskViewModel.saveTask();
+
+        mTaskUpdatedTestObserver.assertSubscribed();
+        mTaskUpdatedTestObserver.assertValue(false);
+        assertThat(mAddEditTaskViewModel.title.getValue(), is(updateStr));
         assertThat(mAddEditTaskViewModel.description.getValue(), is(testTask.getDescription()));
     }
 }

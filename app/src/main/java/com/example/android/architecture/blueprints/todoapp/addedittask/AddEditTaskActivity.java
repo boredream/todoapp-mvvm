@@ -42,11 +42,6 @@ public class AddEditTaskActivity extends BaseActivity<AddEditTaskViewModel, Addt
         return true;
     }
 
-    public void onTaskSaved() {
-        setResult(ADD_EDIT_RESULT_OK);
-        finish();
-    }
-
     @Override
     protected int getLayoutId() {
         return R.layout.addtask_act;
@@ -108,11 +103,10 @@ public class AddEditTaskActivity extends BaseActivity<AddEditTaskViewModel, Addt
 
     private void subscribeToNavigationChanges() {
         // The activity observes the navigation events in the ViewModel
-        mViewModel.getTaskUpdatedEvent().observe(this, taskIdEvent -> {
-            if (taskIdEvent.getContentIfNotHandled() != null) {
-                AddEditTaskActivity.this.onTaskSaved();
-            }
-        });
+        addSubject(mViewModel.getTaskUpdatedEvent().subscribe(isNewTask -> {
+            setResult(ADD_EDIT_RESULT_OK);
+            finish();
+        }));
     }
 
 }

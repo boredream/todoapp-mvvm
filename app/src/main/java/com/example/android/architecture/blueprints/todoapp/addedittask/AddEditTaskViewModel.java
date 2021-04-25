@@ -18,18 +18,15 @@ package com.example.android.architecture.blueprints.todoapp.addedittask;
 
 import androidx.annotation.Nullable;
 import androidx.databinding.ObservableField;
-import androidx.lifecycle.LiveData;
 import androidx.lifecycle.MutableLiveData;
 
 import com.example.android.architecture.blueprints.todoapp.BaseViewModel;
-import com.example.android.architecture.blueprints.todoapp.Event;
-import com.example.android.architecture.blueprints.todoapp.R;
 import com.example.android.architecture.blueprints.todoapp.data.Task;
-import com.example.android.architecture.blueprints.todoapp.data.source.TasksDataSource;
 import com.example.android.architecture.blueprints.todoapp.data.source.TasksRepository;
 
 import io.reactivex.SingleObserver;
 import io.reactivex.disposables.Disposable;
+import io.reactivex.subjects.PublishSubject;
 
 /**
  * ViewModel for the Add/Edit screen.
@@ -45,7 +42,7 @@ public class AddEditTaskViewModel extends BaseViewModel {
     // Two-way databinding, exposing MutableLiveData
     public final MutableLiveData<String> description = new MutableLiveData<>();
 
-    private final MutableLiveData<Event<Object>> mTaskUpdated = new MutableLiveData<>();
+    private final PublishSubject<Boolean> mTaskUpdated = PublishSubject.create();
 
     private final TasksRepository mTasksRepository;
 
@@ -54,9 +51,11 @@ public class AddEditTaskViewModel extends BaseViewModel {
 
     private boolean mIsNewTask;
 
-    private boolean mIsDataLoaded = false;
-
     private boolean mTaskCompleted = false;
+
+    public PublishSubject<Boolean> getTaskUpdatedEvent() {
+        return mTaskUpdated;
+    }
 
     public AddEditTaskViewModel(TasksRepository tasksRepository) {
         mTasksRepository = tasksRepository;
@@ -73,10 +72,7 @@ public class AddEditTaskViewModel extends BaseViewModel {
             mIsNewTask = true;
             return;
         }
-        if (mIsDataLoaded) {
-            // No need to populate, already have data.
-            return;
-        }
+
         mIsNewTask = false;
         mDataLoading.setValue(true);
 
@@ -93,7 +89,6 @@ public class AddEditTaskViewModel extends BaseViewModel {
                         description.setValue(task.getDescription());
                         mTaskCompleted = task.isCompleted();
                         mDataLoading.setValue(false);
-                        mIsDataLoaded = true;
                     }
 
                     @Override
@@ -105,37 +100,37 @@ public class AddEditTaskViewModel extends BaseViewModel {
 
     // Called when clicking on fab.
     void saveTask() {
-        Task task = new Task(title.getValue(), description.getValue());
-        if (task.isEmpty()) {
-            mToastSubject.onNext(R.string.empty_task_message);
-            return;
-        }
-        if (isNewTask() || mTaskId == null) {
-            createTask(task);
+        Task task;
+
+        if (mIsNewTask || mTaskId == null) {
+            task = new Task(title.getValue(), description.getValue());
         } else {
             task = new Task(title.getValue(), description.getValue(), mTaskId, mTaskCompleted);
-            updateTask(task);
         }
-    }
 
-    public LiveData<Event<Object>> getTaskUpdatedEvent() {
-        return mTaskUpdated;
-    }
-
-    private boolean isNewTask() {
-        return mIsNewTask;
-    }
-
-    private void createTask(Task newTask) {
-        mTasksRepository.saveTask(newTask);
-        mTaskUpdated.setValue(new Event<>(new Object()));
-    }
-
-    private void updateTask(Task task) {
-        if (isNewTask()) {
-            throw new RuntimeException("updateTask() was called but task is new.");
+        if (task.isEmpty()) {
+            mToastSubject.onNext("TO DOs cannot be empty");
+            return;
         }
-        mTasksRepository.saveTask(task);
-        mTaskUpdated.setValue(new Event<>(new Object()));
+
+        mTasksRepository.saveTask(task)
+                .subscribe(new SingleObserver<String>() {
+                    @Override
+                    public void onSubscribe(Disposable d) {
+
+                    }
+
+                    @Override
+                    public void onSuccess(String s) {
+                        mTaskUpdated.onNext(mIsNewTask);
+                    }
+
+                    @Override
+                    public void onError(Throwable e) {
+                        String action = mIsNewTask ? "add" : "update";
+                        mToastSubject.onNext(action + " error = " + e.getMessage());
+                    }
+                });
     }
+
 }

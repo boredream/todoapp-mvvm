@@ -98,10 +98,10 @@ public class TaskDetailViewModel extends BaseViewModel {
         Task task = this.mTask.getValue();
         if (completed) {
             mTasksRepository.completeTask(task);
-            mToastSubject.onNext(R.string.task_marked_complete);
+            mToastSubject.onNext("Task marked complete");
         } else {
             mTasksRepository.activateTask(task);
-            mToastSubject.onNext(R.string.task_marked_active);
+            mToastSubject.onNext("Task marked active");
         }
     }
 

@@ -47,7 +47,8 @@ abstract public class BaseActivity<VM extends BaseViewModel, BD extends ViewData
     }
 
     private Disposable setupToast() {
-        return mViewModel.getToastSubject().subscribe(msgId ->
-                Toast.makeText(this, getString(msgId), Toast.LENGTH_SHORT).show());
+        return mViewModel.getToastSubject().subscribe(msg ->
+                Toast.makeText(this, msg, Toast.LENGTH_SHORT).show());
     }
+
 }

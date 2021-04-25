@@ -17,12 +17,10 @@
 package com.example.android.architecture.blueprints.todoapp.tasks;
 
 import android.app.Application;
-import android.content.res.Resources;
 
 import androidx.arch.core.executor.testing.InstantTaskExecutorRule;
 
 import com.example.android.architecture.blueprints.todoapp.LiveDataTestUtil;
-import com.example.android.architecture.blueprints.todoapp.R;
 import com.example.android.architecture.blueprints.todoapp.addedittask.AddEditTaskActivity;
 import com.example.android.architecture.blueprints.todoapp.data.Task;
 import com.example.android.architecture.blueprints.todoapp.data.source.TasksRepository;
@@ -41,11 +39,9 @@ import java.util.List;
 import io.reactivex.Single;
 import io.reactivex.observers.TestObserver;
 
-import static com.example.android.architecture.blueprints.todoapp.R.string.successfully_deleted_task_message;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
-import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
 /**
@@ -67,7 +63,7 @@ public class TasksViewModelTest {
 
     private TasksViewModel mTasksViewModel;
 
-    private TestObserver<Integer> mToastTestObserver;
+    private TestObserver<String> mToastTestObserver;
 
     private TestObserver<Object> mNewTaskTestObserver;
 
@@ -77,8 +73,6 @@ public class TasksViewModelTest {
         // inject the mocks in the test the initMocks method needs to be called.
         MockitoAnnotations.initMocks(this);
 
-        setupContext();
-
         // Get a reference to the class under test
         mTasksViewModel = new TasksViewModel(mTasksRepository);
         mToastTestObserver = new TestObserver<>();
@@ -87,18 +81,6 @@ public class TasksViewModelTest {
         // We initialise the tasks to 3, with one active and two completed
         TASKS = Lists.newArrayList(new Task("Title1", "Description1"),
                 new Task("Title2", "Description2", true), new Task("Title3", "Description3", true));
-    }
-
-    private void setupContext() {
-        when(mContext.getApplicationContext()).thenReturn(mContext);
-        when(mContext.getString(R.string.successfully_saved_task_message))
-                .thenReturn("EDIT_RESULT_OK");
-        when(mContext.getString(R.string.successfully_added_task_message))
-                .thenReturn("ADD_EDIT_RESULT_OK");
-        when(mContext.getString(successfully_deleted_task_message))
-                .thenReturn("DELETE_RESULT_OK");
-
-        when(mContext.getResources()).thenReturn(mock(Resources.class));
     }
 
     @Test
@@ -157,7 +139,7 @@ public class TasksViewModelTest {
         mTasksViewModel.clearCompletedTasks();
 
         // And data loaded
-        mToastTestObserver.assertValue(R.string.completed_tasks_cleared);
+        mToastTestObserver.assertValue("Completed tasks cleared");
         assertTrue(mTasksViewModel.getItems().getValue().isEmpty());
     }
 
@@ -166,7 +148,7 @@ public class TasksViewModelTest {
         // When TaskDetailActivity sends a EDIT_RESULT_OK
         mTasksViewModel.getToastSubject().subscribe(mToastTestObserver);
         mTasksViewModel.handleActivityResult(AddEditTaskActivity.REQUEST_CODE, TaskDetailActivity.EDIT_RESULT_OK);
-        mToastTestObserver.assertValue(R.string.successfully_saved_task_message);
+        mToastTestObserver.assertValue("TO-DO saved");
     }
 
     @Test
@@ -174,7 +156,7 @@ public class TasksViewModelTest {
         // When TaskDetailActivity sends a EDIT_RESULT_OK
         mTasksViewModel.getToastSubject().subscribe(mToastTestObserver);
         mTasksViewModel.handleActivityResult(AddEditTaskActivity.REQUEST_CODE, AddEditTaskActivity.ADD_EDIT_RESULT_OK);
-        mToastTestObserver.assertValue(R.string.successfully_added_task_message);
+        mToastTestObserver.assertValue("TO-DO added");
     }
 
     @Test
@@ -182,7 +164,7 @@ public class TasksViewModelTest {
         // When TaskDetailActivity sends a DELETE_RESULT_OK
         mTasksViewModel.getToastSubject().subscribe(mToastTestObserver);
         mTasksViewModel.handleActivityResult(AddEditTaskActivity.REQUEST_CODE, TaskDetailActivity.DELETE_RESULT_OK);
-        mToastTestObserver.assertValue(R.string.successfully_deleted_task_message);
+        mToastTestObserver.assertValue("Task was deleted");
     }
 
     @Test
