@@ -25,14 +25,10 @@ import android.widget.ListView;
 import androidx.appcompat.widget.PopupMenu;
 import androidx.appcompat.widget.Toolbar;
 import androidx.core.content.ContextCompat;
-import androidx.databinding.DataBindingUtil;
-import androidx.lifecycle.ViewModelProvider;
 
 import com.example.android.architecture.blueprints.todoapp.BaseActivity;
-import com.example.android.architecture.blueprints.todoapp.BaseViewModel;
 import com.example.android.architecture.blueprints.todoapp.R;
 import com.example.android.architecture.blueprints.todoapp.ScrollChildSwipeRefreshLayout;
-import com.example.android.architecture.blueprints.todoapp.ViewModelFactory;
 import com.example.android.architecture.blueprints.todoapp.addedittask.AddEditTaskActivity;
 import com.example.android.architecture.blueprints.todoapp.databinding.TasksActBinding;
 import com.example.android.architecture.blueprints.todoapp.taskdetail.TaskDetailActivity;
@@ -40,22 +36,18 @@ import com.example.android.architecture.blueprints.todoapp.taskdetail.TaskDetail
 import java.util.ArrayList;
 
 
-public class TasksActivity extends BaseActivity implements TaskItemNavigator {
+public class TasksActivity extends BaseActivity<TasksViewModel, TasksActBinding> implements TaskItemNavigator {
 
-    private TasksActBinding mBinding;
-    private TasksViewModel mViewModel;
     private TasksAdapter mListAdapter;
 
     @Override
-    protected BaseViewModel genViewModel() {
-        mBinding = DataBindingUtil.setContentView(this, R.layout.tasks_act);
-        ViewModelFactory factory = ViewModelFactory.getInstance(getApplication());
-        mViewModel = new ViewModelProvider(this, factory).get(TasksViewModel.class);
+    protected int getLayoutId() {
+        return R.layout.tasks_act;
+    }
 
-        mBinding.setLifecycleOwner(this);
-        mBinding.setViewModel(mViewModel);
-
-        return mViewModel;
+    @Override
+    protected Class<TasksViewModel> genViewModel() {
+        return TasksViewModel.class;
     }
 
     @Override

@@ -28,13 +28,16 @@ import com.example.android.architecture.blueprints.todoapp.data.Task;
 import com.example.android.architecture.blueprints.todoapp.data.source.TasksDataSource;
 import com.example.android.architecture.blueprints.todoapp.data.source.TasksRepository;
 
+import io.reactivex.SingleObserver;
+import io.reactivex.disposables.Disposable;
+
 /**
  * ViewModel for the Add/Edit screen.
  * <p>
  * This ViewModel only exposes {@link ObservableField}s, so it doesn't need to extend
  * {@link androidx.databinding.BaseObservable} and updates are notified automatically.
  */
-public class AddEditTaskViewModel extends BaseViewModel implements TasksDataSource.GetTaskCallback {
+public class AddEditTaskViewModel extends BaseViewModel {
 
     // Two-way databinding, exposing MutableLiveData
     public final MutableLiveData<String> title = new MutableLiveData<>();
@@ -77,22 +80,27 @@ public class AddEditTaskViewModel extends BaseViewModel implements TasksDataSour
         mIsNewTask = false;
         mDataLoading.setValue(true);
 
-//        mTasksRepository.getTask(taskId, this);
-        // FIXME: 4/22/21 
-    }
+        mTasksRepository.getTask(taskId)
+                .subscribe(new SingleObserver<Task>() {
+                    @Override
+                    public void onSubscribe(Disposable d) {
 
-    @Override
-    public void onTaskLoaded(Task task) {
-        title.setValue(task.getTitle());
-        description.setValue(task.getDescription());
-        mTaskCompleted = task.isCompleted();
-        mDataLoading.setValue(false);
-        mIsDataLoaded = true;
-    }
+                    }
 
-    @Override
-    public void onDataNotAvailable() {
-        mDataLoading.setValue(false);
+                    @Override
+                    public void onSuccess(Task task) {
+                        title.setValue(task.getTitle());
+                        description.setValue(task.getDescription());
+                        mTaskCompleted = task.isCompleted();
+                        mDataLoading.setValue(false);
+                        mIsDataLoaded = true;
+                    }
+
+                    @Override
+                    public void onError(Throwable e) {
+                        mDataLoading.setValue(false);
+                    }
+                });
     }
 
     // Called when clicking on fab.

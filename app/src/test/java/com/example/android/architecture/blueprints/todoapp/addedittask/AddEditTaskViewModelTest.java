@@ -31,11 +31,15 @@ import org.mockito.MockitoAnnotations;
 
 import androidx.arch.core.executor.testing.InstantTaskExecutorRule;
 
+import io.reactivex.Single;
+import io.reactivex.subscribers.TestSubscriber;
+
 import static org.hamcrest.Matchers.is;
 import static org.junit.Assert.assertThat;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
 /**
  * Unit tests for the implementation of {@link AddEditTaskViewModel}.
@@ -48,13 +52,6 @@ public class AddEditTaskViewModelTest {
 
     @Mock
     private TasksRepository mTasksRepository;
-
-    /**
-     * {@link ArgumentCaptor} is a powerful Mockito API to capture argument values and use them to
-     * perform further actions or assertions on them.
-     */
-    @Captor
-    private ArgumentCaptor<TasksDataSource.GetTaskCallback> mGetTaskCallbackCaptor;
 
     private AddEditTaskViewModel mAddEditTaskViewModel;
 
@@ -69,35 +66,29 @@ public class AddEditTaskViewModelTest {
     }
 
     @Test
-    public void saveNewTaskToRepository_showsSuccessMessageUi() {
-        // When the ViewModel is asked to save a task
+    public void saveNewTask() {
+        mAddEditTaskViewModel.start(null);
+
         mAddEditTaskViewModel.description.setValue("Some Task Description");
         mAddEditTaskViewModel.title.setValue("New Task Title");
         mAddEditTaskViewModel.saveTask();
 
-        // Then a task is saved in the repository and the view updated
-        verify(mTasksRepository).saveTask(any(Task.class)); // saved to the model
+        verify(mTasksRepository).saveTask(any(Task.class));
     }
 
-//    @Test
-//    public void populateTask_callsRepoAndUpdatesView() {
-//        Task testTask = new Task("TITLE", "DESCRIPTION", "1");
-//
-//        // Get a reference to the class under test
-//        mAddEditTaskViewModel = new AddEditTaskViewModel(mTasksRepository);
-//
-//
-//        // When the ViewModel is asked to populate an existing task
-//        mAddEditTaskViewModel.start(testTask.getId());
-//
-//        // Then the task repository is queried and the view updated
-//        verify(mTasksRepository).getTask(eq(testTask.getId()), mGetTaskCallbackCaptor.capture());
-//
-//        // Simulate callback
-//        mGetTaskCallbackCaptor.getValue().onTaskLoaded(testTask);
-//
-//        // Verify the fields were updated
-//        assertThat(mAddEditTaskViewModel.title.getValue(), is(testTask.getTitle()));
-//        assertThat(mAddEditTaskViewModel.description.getValue(), is(testTask.getDescription()));
-//    }
+    @Test
+    public void populateTask_callsRepoAndUpdatesView() {
+        Task testTask = new Task("TITLE", "DESCRIPTION", "1");
+
+        // When the ViewModel is asked to populate an existing task
+        when(mTasksRepository.getTask(testTask.getId())).thenReturn(Single.just(testTask));
+        mAddEditTaskViewModel.start(testTask.getId());
+
+        // Then the task repository is queried and the view updated
+        mTasksRepository.getTask(testTask.getId()).test().assertSubscribed();
+
+        // Verify the fields were updated
+        assertThat(mAddEditTaskViewModel.title.getValue(), is(testTask.getTitle()));
+        assertThat(mAddEditTaskViewModel.description.getValue(), is(testTask.getDescription()));
+    }
 }

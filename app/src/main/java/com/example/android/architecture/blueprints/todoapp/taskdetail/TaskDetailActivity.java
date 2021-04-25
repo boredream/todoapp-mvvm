@@ -27,10 +27,10 @@ import androidx.lifecycle.Observer;
 import androidx.lifecycle.ViewModelProviders;
 
 import com.example.android.architecture.blueprints.todoapp.BaseActivity;
-import com.example.android.architecture.blueprints.todoapp.BaseViewModel;
 import com.example.android.architecture.blueprints.todoapp.Event;
 import com.example.android.architecture.blueprints.todoapp.R;
 import com.example.android.architecture.blueprints.todoapp.ViewModelFactory;
+import com.example.android.architecture.blueprints.todoapp.databinding.TaskdetailFragBinding;
 import com.example.android.architecture.blueprints.todoapp.util.ActivityUtils;
 
 import static com.example.android.architecture.blueprints.todoapp.addedittask.AddEditTaskActivity.ADD_EDIT_RESULT_OK;
@@ -39,7 +39,7 @@ import static com.example.android.architecture.blueprints.todoapp.taskdetail.Tas
 /**
  * Displays task details screen.
  */
-public class TaskDetailActivity extends BaseActivity implements TaskDetailNavigator {
+public class TaskDetailActivity extends BaseActivity<TaskDetailViewModel, TaskdetailFragBinding> implements TaskDetailNavigator {
 
     public static final String EXTRA_TASK_ID = "TASK_ID";
 
@@ -47,18 +47,19 @@ public class TaskDetailActivity extends BaseActivity implements TaskDetailNaviga
 
     public static final int EDIT_RESULT_OK = RESULT_FIRST_USER + 3;
 
-    private TaskDetailViewModel mTaskViewModel;
+    @Override
+    protected int getLayoutId() {
+        return R.layout.taskdetail_act;
+    }
 
     @Override
-    protected BaseViewModel genViewModel() {
-        return mTaskViewModel;
+    protected Class<TaskDetailViewModel> genViewModel() {
+        return TaskDetailViewModel.class;
     }
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-
-        setContentView(R.layout.taskdetail_act);
 
         setupToolbar();
 
@@ -67,9 +68,7 @@ public class TaskDetailActivity extends BaseActivity implements TaskDetailNaviga
         ActivityUtils.replaceFragmentInActivity(getSupportFragmentManager(),
                 taskDetailFragment, R.id.contentFrame);
 
-        mTaskViewModel = obtainViewModel(this);
-
-        subscribeToNavigationChanges(mTaskViewModel);
+        subscribeToNavigationChanges();
     }
 
     @NonNull
@@ -102,9 +101,9 @@ public class TaskDetailActivity extends BaseActivity implements TaskDetailNaviga
         ab.setDisplayShowHomeEnabled(true);
     }
 
-    private void subscribeToNavigationChanges(TaskDetailViewModel viewModel) {
+    private void subscribeToNavigationChanges() {
         // The activity observes the navigation commands in the ViewModel
-        viewModel.getEditTaskCommand().observe(this, new Observer<Event<Object>>() {
+        mViewModel.getEditTaskCommand().observe(this, new Observer<Event<Object>>() {
             @Override
             public void onChanged(Event<Object> taskEvent) {
                 if (taskEvent.getContentIfNotHandled() != null) {
@@ -112,7 +111,7 @@ public class TaskDetailActivity extends BaseActivity implements TaskDetailNaviga
                 }
             }
         });
-        viewModel.getDeleteTaskCommand().observe(this, new Observer<Event<Object>>() {
+        mViewModel.getDeleteTaskCommand().observe(this, new Observer<Event<Object>>() {
             @Override
             public void onChanged(Event<Object> taskEvent) {
                 if (taskEvent.getContentIfNotHandled() != null) {
