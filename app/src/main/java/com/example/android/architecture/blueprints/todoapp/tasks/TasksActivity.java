@@ -21,30 +21,26 @@ import android.os.Bundle;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.widget.ListView;
-import android.widget.Toast;
 
 import androidx.appcompat.widget.PopupMenu;
 import androidx.appcompat.widget.Toolbar;
 import androidx.core.content.ContextCompat;
 import androidx.databinding.DataBindingUtil;
-import androidx.lifecycle.Observer;
 import androidx.lifecycle.ViewModelProvider;
 
 import com.example.android.architecture.blueprints.todoapp.BaseActivity;
 import com.example.android.architecture.blueprints.todoapp.BaseViewModel;
-import com.example.android.architecture.blueprints.todoapp.Event;
 import com.example.android.architecture.blueprints.todoapp.R;
 import com.example.android.architecture.blueprints.todoapp.ScrollChildSwipeRefreshLayout;
 import com.example.android.architecture.blueprints.todoapp.ViewModelFactory;
 import com.example.android.architecture.blueprints.todoapp.addedittask.AddEditTaskActivity;
-import com.example.android.architecture.blueprints.todoapp.data.Task;
 import com.example.android.architecture.blueprints.todoapp.databinding.TasksActBinding;
 import com.example.android.architecture.blueprints.todoapp.taskdetail.TaskDetailActivity;
 
 import java.util.ArrayList;
 
 
-public class TasksActivity extends BaseActivity implements TaskItemNavigator, TasksNavigator {
+public class TasksActivity extends BaseActivity implements TaskItemNavigator {
 
     private TasksActBinding mBinding;
     private TasksViewModel mViewModel;
@@ -71,24 +67,18 @@ public class TasksActivity extends BaseActivity implements TaskItemNavigator, Ta
         setupRefreshLayout();
 
         // Subscribe to "open task" event
-        mViewModel.getOpenTaskEvent().observe(this, new Observer<Event<String>>() {
-            @Override
-            public void onChanged(Event<String> taskIdEvent) {
-                String taskId = taskIdEvent.getContentIfNotHandled();
-                if (taskId != null) {
-                    openTaskDetails(taskId);
-                }
-
+        mViewModel.getOpenTaskEvent().observe(this, taskIdEvent -> {
+            String taskId = taskIdEvent.getContentIfNotHandled();
+            if (taskId != null) {
+                openTaskDetails(taskId);
             }
+
         });
 
         // Subscribe to "new task" event
-        mViewModel.getNewTaskEvent().observe(this, new Observer<Event<Object>>() {
-            @Override
-            public void onChanged(Event<Object> taskIdEvent) {
-                if (taskIdEvent.getContentIfNotHandled() != null) {
-                    addNewTask();
-                }
+        mViewModel.getNewTaskEvent().observe(this, taskIdEvent -> {
+            if (taskIdEvent.getContentIfNotHandled() != null) {
+                addNewTask();
             }
         });
 
@@ -102,7 +92,7 @@ public class TasksActivity extends BaseActivity implements TaskItemNavigator, Ta
 
     private void setupListAdapter() {
         ListView listView = mBinding.tasksList;
-        mListAdapter = new TasksAdapter(new ArrayList<Task>(0), mViewModel, this);
+        mListAdapter = new TasksAdapter(new ArrayList<>(0), mViewModel, this);
         listView.setAdapter(mListAdapter);
     }
 
@@ -144,22 +134,20 @@ public class TasksActivity extends BaseActivity implements TaskItemNavigator, Ta
         PopupMenu popup = new PopupMenu(this, findViewById(R.id.menu_filter));
         popup.getMenuInflater().inflate(R.menu.filter_tasks, popup.getMenu());
 
-        popup.setOnMenuItemClickListener(new PopupMenu.OnMenuItemClickListener() {
-            public boolean onMenuItemClick(MenuItem item) {
-                switch (item.getItemId()) {
-                    case R.id.active:
-                        mViewModel.setFiltering(TasksFilterType.ACTIVE_TASKS);
-                        break;
-                    case R.id.completed:
-                        mViewModel.setFiltering(TasksFilterType.COMPLETED_TASKS);
-                        break;
-                    default:
-                        mViewModel.setFiltering(TasksFilterType.ALL_TASKS);
-                        break;
-                }
-                mViewModel.loadTasks(false);
-                return true;
+        popup.setOnMenuItemClickListener(item -> {
+            switch (item.getItemId()) {
+                case R.id.active:
+                    mViewModel.setFiltering(TasksFilterType.ACTIVE_TASKS);
+                    break;
+                case R.id.completed:
+                    mViewModel.setFiltering(TasksFilterType.COMPLETED_TASKS);
+                    break;
+                default:
+                    mViewModel.setFiltering(TasksFilterType.ALL_TASKS);
+                    break;
             }
+            mViewModel.loadTasks(false);
+            return true;
         });
 
         popup.show();
@@ -178,7 +166,6 @@ public class TasksActivity extends BaseActivity implements TaskItemNavigator, Ta
         startActivityForResult(intent, AddEditTaskActivity.REQUEST_CODE);
     }
 
-    @Override
     public void addNewTask() {
         Intent intent = new Intent(this, AddEditTaskActivity.class);
         startActivityForResult(intent, AddEditTaskActivity.REQUEST_CODE);

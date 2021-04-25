@@ -28,6 +28,7 @@ import java.util.concurrent.TimeUnit;
 import io.reactivex.Single;
 import io.reactivex.SingleEmitter;
 import io.reactivex.SingleOnSubscribe;
+import io.reactivex.SingleTransformer;
 import io.reactivex.android.schedulers.AndroidSchedulers;
 import io.reactivex.schedulers.Schedulers;
 
@@ -61,14 +62,18 @@ public class TasksRepository {
         INSTANCE = null;
     }
 
+    private <T> SingleTransformer<T, T> getSingleTransformer() {
+        return upstream -> upstream.delay(SERVICE_LATENCY_IN_MILLIS, TimeUnit.MILLISECONDS)
+                .subscribeOn(Schedulers.io())
+                .observeOn(AndroidSchedulers.mainThread());
+    }
+
     public Single<List<Task>> getTasks() {
         EspressoIdlingResource.increment(); // App is busy until further notice
         return Single.create((SingleOnSubscribe<List<Task>>) emitter -> {
             EspressoIdlingResource.decrement(); // Set app as idle.
             emitter.onSuccess(mTasksDao.getTasks());
-        }).delay(SERVICE_LATENCY_IN_MILLIS, TimeUnit.MILLISECONDS)
-                .subscribeOn(Schedulers.io())
-                .observeOn(AndroidSchedulers.mainThread());
+        }).compose(getSingleTransformer());
     }
 
     public Single<String> saveTask(@NonNull final Task task) {
@@ -77,7 +82,7 @@ public class TasksRepository {
             EspressoIdlingResource.decrement(); // Set app as idle.
             mTasksDao.insertTask(task);
             emitter.onSuccess("ok");
-        }).delay(SERVICE_LATENCY_IN_MILLIS, TimeUnit.MILLISECONDS);
+        }).compose(getSingleTransformer());
     }
 
     public Single<String> completeTask(@NonNull final Task task) {
@@ -86,7 +91,7 @@ public class TasksRepository {
             EspressoIdlingResource.decrement(); // Set app as idle.
             mTasksDao.updateCompleted(task.getId(), true);
             emitter.onSuccess("ok");
-        }).delay(SERVICE_LATENCY_IN_MILLIS, TimeUnit.MILLISECONDS);
+        }).compose(getSingleTransformer());
     }
 
     public Single<String> completeTask(@NonNull final String taskId) {
@@ -95,7 +100,7 @@ public class TasksRepository {
             EspressoIdlingResource.decrement(); // Set app as idle.
             mTasksDao.updateCompleted(taskId, true);
             emitter.onSuccess("ok");
-        }).delay(SERVICE_LATENCY_IN_MILLIS, TimeUnit.MILLISECONDS);
+        }).compose(getSingleTransformer());
     }
 
     public Single<String> activateTask(@NonNull final Task task) {
@@ -104,7 +109,7 @@ public class TasksRepository {
             EspressoIdlingResource.decrement(); // Set app as idle.
             mTasksDao.updateCompleted(task.getId(), false);
             emitter.onSuccess("ok");
-        }).delay(SERVICE_LATENCY_IN_MILLIS, TimeUnit.MILLISECONDS);
+        }).compose(getSingleTransformer());
     }
 
     public Single<String> activateTask(@NonNull final String taskId) {
@@ -113,7 +118,7 @@ public class TasksRepository {
             EspressoIdlingResource.decrement(); // Set app as idle.
             mTasksDao.updateCompleted(taskId, false);
             emitter.onSuccess("ok");
-        }).delay(SERVICE_LATENCY_IN_MILLIS, TimeUnit.MILLISECONDS);
+        }).compose(getSingleTransformer());
     }
 
     public Single<String> clearCompletedTasks() {
@@ -122,7 +127,7 @@ public class TasksRepository {
             EspressoIdlingResource.decrement(); // Set app as idle.
             mTasksDao.deleteCompletedTasks();
             emitter.onSuccess("ok");
-        }).delay(SERVICE_LATENCY_IN_MILLIS, TimeUnit.MILLISECONDS);
+        }).compose(getSingleTransformer());
     }
 
     public Single<Task> getTask(@NonNull final String taskId) {
@@ -130,7 +135,7 @@ public class TasksRepository {
         return Single.create((SingleOnSubscribe<Task>) emitter -> {
             EspressoIdlingResource.decrement(); // Set app as idle.
             emitter.onSuccess(mTasksDao.getTaskById(taskId));
-        }).delay(SERVICE_LATENCY_IN_MILLIS, TimeUnit.MILLISECONDS);
+        }).compose(getSingleTransformer());
     }
 
     public void refreshTasks() {
@@ -144,7 +149,7 @@ public class TasksRepository {
             EspressoIdlingResource.decrement(); // Set app as idle.
             mTasksDao.deleteTasks();
             emitter.onSuccess("ok");
-        }).delay(SERVICE_LATENCY_IN_MILLIS, TimeUnit.MILLISECONDS);
+        }).compose(getSingleTransformer());
     }
 
     public Single<String> deleteTask(@NonNull final String taskId) {
@@ -156,6 +161,6 @@ public class TasksRepository {
                 mTasksDao.deleteTaskById(taskId);
                 emitter.onSuccess("ok");
             }
-        }).delay(SERVICE_LATENCY_IN_MILLIS, TimeUnit.MILLISECONDS);
+        }).compose(getSingleTransformer());
     }
 }

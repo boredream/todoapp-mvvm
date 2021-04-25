@@ -127,7 +127,7 @@ public class TasksViewModel extends BaseViewModel {
     }
 
     public void clearCompletedTasks() {
-        mTasksRepository.clearCompletedTasks();
+        mTasksRepository.clearCompletedTasks().subscribe();
         mToastSubject.onNext(R.string.completed_tasks_cleared);
         loadTasks(false, false);
     }
@@ -204,10 +204,6 @@ public class TasksViewModel extends BaseViewModel {
             }
         }
     }
-
-//    private void showSnackbarMessage(Integer message) {
-//        mSnackbarText.onNext(message);
-//    }
 
     private void loadTasks(boolean forceUpdate, final boolean showLoadingUI) {
         if (forceUpdate) {
