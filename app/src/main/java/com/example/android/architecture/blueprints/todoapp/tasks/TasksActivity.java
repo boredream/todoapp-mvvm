@@ -25,7 +25,6 @@ import android.widget.ListView;
 import androidx.appcompat.widget.PopupMenu;
 import androidx.appcompat.widget.Toolbar;
 import androidx.core.content.ContextCompat;
-import androidx.lifecycle.Observer;
 
 import com.example.android.architecture.blueprints.todoapp.BaseActivity;
 import com.example.android.architecture.blueprints.todoapp.R;
@@ -129,7 +128,7 @@ public class TasksActivity extends BaseActivity<TasksViewModel, TasksActBinding>
                     mViewModel.setFiltering(TasksFilterType.ALL_TASKS);
                     break;
             }
-            mViewModel.loadTasks();
+            mViewModel.refreshFilterList();
             return true;
         });
 

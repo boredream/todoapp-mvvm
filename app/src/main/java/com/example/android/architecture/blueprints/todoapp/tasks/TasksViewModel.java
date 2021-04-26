@@ -35,6 +35,7 @@ import java.util.List;
 
 import io.reactivex.SingleObserver;
 import io.reactivex.disposables.Disposable;
+import io.reactivex.functions.Function;
 
 
 /**
@@ -112,7 +113,10 @@ public class TasksViewModel extends BaseViewModel {
                 mTasksAddViewVisible.setValue(false);
                 break;
         }
+    }
 
+    public void refreshFilterList() {
+        mItems.setValue(filterList(mItems.getValue()));
     }
 
     public void clearCompletedTasks() {
@@ -191,6 +195,7 @@ public class TasksViewModel extends BaseViewModel {
 
     public void loadTasks() {
         mTasksRepository.getTasks()
+                .map((Function<List<Task>, List<Task>>) this::filterList)
                 .subscribe(new SingleObserver<List<Task>>() {
                     @Override
                     public void onSubscribe(Disposable d) {
@@ -201,33 +206,7 @@ public class TasksViewModel extends BaseViewModel {
                     public void onSuccess(List<Task> tasks) {
                         mDataLoading.setValue(false);
                         mIsDataLoadingError.setValue(false);
-
-                        List<Task> tasksToShow = new ArrayList<>();
-
-                        // We filter the tasks based on the requestType
-                        for (Task task : tasks) {
-                            switch (mCurrentFiltering) {
-                                case ACTIVE_TASKS:
-                                    if (task.isActive()) {
-                                        tasksToShow.add(task);
-                                    }
-                                    break;
-                                case COMPLETED_TASKS:
-                                    if (task.isCompleted()) {
-                                        tasksToShow.add(task);
-                                    }
-                                    break;
-                                case ALL_TASKS:
-                                default:
-                                    tasksToShow.add(task);
-                                    break;
-                            }
-                        }
-                        mDataLoading.setValue(false);
-                        mIsDataLoadingError.setValue(false);
-
-                        List<Task> itemsValue = new ArrayList<>(tasksToShow);
-                        mItems.setValue(itemsValue);
+                        mItems.setValue(tasks);
                     }
 
                     @Override
@@ -237,6 +216,33 @@ public class TasksViewModel extends BaseViewModel {
                         e.printStackTrace();
                     }
                 });
+    }
+
+    private List<Task> filterList(List<Task> tasks) {
+        if (tasks == null) return null;
+
+        List<Task> tasksToShow = new ArrayList<>();
+
+        // We filter the tasks based on the requestType
+        for (Task task : tasks) {
+            switch (mCurrentFiltering) {
+                case ACTIVE_TASKS:
+                    if (task.isActive()) {
+                        tasksToShow.add(task);
+                    }
+                    break;
+                case COMPLETED_TASKS:
+                    if (task.isCompleted()) {
+                        tasksToShow.add(task);
+                    }
+                    break;
+                case ALL_TASKS:
+                default:
+                    tasksToShow.add(task);
+                    break;
+            }
+        }
+        return tasksToShow;
     }
 
 }

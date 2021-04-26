@@ -22,6 +22,7 @@ import com.example.android.architecture.blueprints.todoapp.data.Task;
 import com.example.android.architecture.blueprints.todoapp.data.source.local.TasksDao;
 import com.example.android.architecture.blueprints.todoapp.util.EspressoIdlingResource;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 
@@ -32,14 +33,17 @@ import io.reactivex.android.schedulers.AndroidSchedulers;
 import io.reactivex.schedulers.Schedulers;
 
 /**
- * 实际开发中简化只用远程数据（用db+延迟模拟接口获取）
+ * 实际开发中简化只用 remote + cache，去掉 local db（远程这里用room + 延迟模拟接口获取）
  */
 public class TasksRepository {
 
     private static final int SERVICE_LATENCY_IN_MILLIS = 1000;
+    private volatile static TasksRepository INSTANCE = null;
     private TasksDao mTasksDao;
 
-    private volatile static TasksRepository INSTANCE = null;
+    // 只在拉取和获取时使用内存。其它情况如新增修改之后会重新拉取，因此这类操作不处理内存
+    private List<Task> mCachedTasks;
+    private boolean mCacheIsDirty;
 
     // Prevent direct instantiation.
     private TasksRepository(TasksDao tasksDao) {
@@ -61,6 +65,10 @@ public class TasksRepository {
         INSTANCE = null;
     }
 
+    public void setCacheIsDirty(boolean cacheIsDirty) {
+        mCacheIsDirty = cacheIsDirty;
+    }
+
     private <T> SingleTransformer<T, T> getSingleTransformer() {
         return upstream -> upstream.delay(SERVICE_LATENCY_IN_MILLIS, TimeUnit.MILLISECONDS)
                 .subscribeOn(Schedulers.io())
@@ -68,14 +76,21 @@ public class TasksRepository {
     }
 
     public Single<List<Task>> getTasks() {
+        if(mCachedTasks != null && !mCacheIsDirty) {
+            return Single.just(mCachedTasks);
+        }
+
         EspressoIdlingResource.increment(); // App is busy until further notice
         return Single.create((SingleOnSubscribe<List<Task>>) emitter -> {
             EspressoIdlingResource.decrement(); // Set app as idle.
-            emitter.onSuccess(mTasksDao.getTasks());
+            refreshCache(mTasksDao.getTasks());
+            emitter.onSuccess(mCachedTasks);
         }).compose(getSingleTransformer());
     }
 
     public Single<String> saveTask(@NonNull final Task task) {
+        // TODO: 4/26/21 这类方法需要缓存操作吗？
+
         EspressoIdlingResource.increment(); // App is busy until further notice
         return Single.create((SingleOnSubscribe<String>) emitter -> {
             EspressoIdlingResource.decrement(); // Set app as idle.
@@ -130,7 +145,14 @@ public class TasksRepository {
     }
 
     public Single<Task> getTask(@NonNull final String taskId) {
-        System.out.println("getTask " + taskId);
+        if(mCachedTasks != null && !mCacheIsDirty) {
+            for (Task task : mCachedTasks) {
+                if(taskId.equals(task.getId())) {
+                    return Single.just(task);
+                }
+            }
+        }
+
         EspressoIdlingResource.increment(); // App is busy until further notice
         return Single.create((SingleOnSubscribe<Task>) emitter -> {
             EspressoIdlingResource.decrement(); // Set app as idle.
@@ -154,5 +176,14 @@ public class TasksRepository {
             mTasksDao.deleteTaskById(taskId);
             emitter.onSuccess("ok");
         }).compose(getSingleTransformer());
+    }
+
+    private void refreshCache(List<Task> tasks) {
+        if (mCachedTasks == null) {
+            mCachedTasks = new ArrayList<>();
+        }
+        mCachedTasks.clear();
+        mCachedTasks.addAll(tasks);
+        mCacheIsDirty = false;
     }
 }
