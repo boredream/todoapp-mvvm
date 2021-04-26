@@ -29,7 +29,7 @@ import java.util.List;
 public class TasksListBindings {
 
     @SuppressWarnings("unchecked")
-    @BindingAdapter("app:items")
+    @BindingAdapter("items")
     public static void setItems(ListView listView, List<Task> items) {
         TasksAdapter adapter = (TasksAdapter) listView.getAdapter();
         if (adapter != null)

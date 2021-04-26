@@ -16,33 +16,24 @@
 
 package com.example.android.architecture.blueprints.todoapp;
 
-import androidx.annotation.NonNull;
 import androidx.lifecycle.LiveData;
 import androidx.lifecycle.MutableLiveData;
 import androidx.lifecycle.ViewModel;
 
-import io.reactivex.Observable;
-import io.reactivex.subjects.PublishSubject;
-
 
 public class BaseViewModel extends ViewModel {
 
-    // live data 直接绑定
+    // live data 可与视图直接绑定，也可以作为事件的回调
     protected final MutableLiveData<Boolean> mDataLoading = new MutableLiveData<>();
 
-    // 事件用 subject，获取监听回调
-    protected final PublishSubject<String> mToastSubject;
-
-    public BaseViewModel() {
-        mToastSubject = PublishSubject.create();
-    }
+    // 事件
+    protected final SingleLiveEvent<String> mToastEvent = new SingleLiveEvent<>();
 
     public LiveData<Boolean> isDataLoading() {
         return mDataLoading;
     }
 
-    @NonNull
-    public PublishSubject<String> getToastSubject() {
-        return mToastSubject;
+    public SingleLiveEvent<String> getToastEvent() {
+        return mToastEvent;
     }
 }

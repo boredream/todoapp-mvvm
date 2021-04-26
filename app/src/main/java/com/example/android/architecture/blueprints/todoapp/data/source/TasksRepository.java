@@ -131,6 +131,7 @@ public class TasksRepository {
     }
 
     public Single<Task> getTask(@NonNull final String taskId) {
+        System.out.println("getTask " + taskId);
         EspressoIdlingResource.increment(); // App is busy until further notice
         return Single.create((SingleOnSubscribe<Task>) emitter -> {
             EspressoIdlingResource.decrement(); // Set app as idle.

@@ -21,12 +21,12 @@ import androidx.databinding.ObservableField;
 import androidx.lifecycle.MutableLiveData;
 
 import com.example.android.architecture.blueprints.todoapp.BaseViewModel;
+import com.example.android.architecture.blueprints.todoapp.SingleLiveEvent;
 import com.example.android.architecture.blueprints.todoapp.data.Task;
 import com.example.android.architecture.blueprints.todoapp.data.source.TasksRepository;
 
 import io.reactivex.SingleObserver;
 import io.reactivex.disposables.Disposable;
-import io.reactivex.subjects.PublishSubject;
 
 /**
  * ViewModel for the Add/Edit screen.
@@ -42,7 +42,7 @@ public class AddEditTaskViewModel extends BaseViewModel {
     // Two-way databinding, exposing MutableLiveData
     public final MutableLiveData<String> description = new MutableLiveData<>();
 
-    private final PublishSubject<Boolean> mTaskUpdated = PublishSubject.create();
+    private final SingleLiveEvent<Boolean> mTaskUpdatedEvent = new SingleLiveEvent<>();
 
     private final TasksRepository mTasksRepository;
 
@@ -53,8 +53,8 @@ public class AddEditTaskViewModel extends BaseViewModel {
 
     private boolean mTaskCompleted = false;
 
-    public PublishSubject<Boolean> getTaskUpdatedEvent() {
-        return mTaskUpdated;
+    public SingleLiveEvent<Boolean> getTaskUpdatedEvent() {
+        return mTaskUpdatedEvent;
     }
 
     public AddEditTaskViewModel(TasksRepository tasksRepository) {
@@ -108,7 +108,7 @@ public class AddEditTaskViewModel extends BaseViewModel {
         }
 
         if (task.isEmpty()) {
-            mToastSubject.onNext("TO DOs cannot be empty");
+            mToastEvent.setValue("TO DOs cannot be empty");
             return;
         }
 
@@ -121,7 +121,7 @@ public class AddEditTaskViewModel extends BaseViewModel {
 
                     @Override
                     public void onSuccess(String s) {
-                        mTaskUpdated.onNext(mIsNewTask);
+                        mTaskUpdatedEvent.setValue(mIsNewTask);
                         mDataLoading.setValue(false);
                     }
 
@@ -129,7 +129,7 @@ public class AddEditTaskViewModel extends BaseViewModel {
                     public void onError(Throwable e) {
                         mDataLoading.setValue(false);
                         String action = mIsNewTask ? "add" : "update";
-                        mToastSubject.onNext(action + " error = " + e.getMessage());
+                        mToastEvent.setValue(action + " error = " + e.getMessage());
                     }
                 });
     }

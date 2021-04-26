@@ -101,10 +101,10 @@ public class AddEditTaskActivity extends BaseActivity<AddEditTaskViewModel, Addt
 
     private void subscribeToNavigationChanges() {
         // The activity observes the navigation events in the ViewModel
-        addSubject(mViewModel.getTaskUpdatedEvent().subscribe(isNewTask -> {
+        mViewModel.getTaskUpdatedEvent().observe(this, isNewTask -> {
             setResult(ADD_EDIT_RESULT_OK);
             finish();
-        }));
+        });
     }
 
 }

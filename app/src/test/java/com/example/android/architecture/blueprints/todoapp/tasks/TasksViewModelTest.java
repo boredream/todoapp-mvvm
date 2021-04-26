@@ -122,7 +122,7 @@ public class TasksViewModelTest {
     @SuppressWarnings("unchecked")
     @Test
     public void clickOnFab_ShowsAddTaskUi() throws InterruptedException {
-        mTasksViewModel.getNewTaskSubject().subscribe(mNewTaskTestObserver);
+        mTasksViewModel.getNewTaskEvent().subscribe(mNewTaskTestObserver);
 
         // When adding a new task
         mTasksViewModel.addNewTask();
@@ -135,7 +135,7 @@ public class TasksViewModelTest {
     public void clearCompletedTasks_ClearsTasks() {
         when(mTasksRepository.clearCompletedTasks()).thenReturn(Single.just("ok"));
         when(mTasksRepository.getTasks()).thenReturn(Single.just(new ArrayList<>()));
-        mTasksViewModel.getToastSubject().subscribe(mToastTestObserver);
+        mTasksViewModel.getToastEvent().subscribe(mToastTestObserver);
         mTasksViewModel.clearCompletedTasks();
 
         // And data loaded
@@ -146,7 +146,7 @@ public class TasksViewModelTest {
     @Test
     public void handleActivityResult_editOK() {
         // When TaskDetailActivity sends a EDIT_RESULT_OK
-        mTasksViewModel.getToastSubject().subscribe(mToastTestObserver);
+        mTasksViewModel.getToastEvent().subscribe(mToastTestObserver);
         mTasksViewModel.handleActivityResult(AddEditTaskActivity.REQUEST_CODE, TaskDetailActivity.EDIT_RESULT_OK);
         mToastTestObserver.assertValue("TO-DO saved");
     }
@@ -154,7 +154,7 @@ public class TasksViewModelTest {
     @Test
     public void handleActivityResult_addEditOK() {
         // When TaskDetailActivity sends a EDIT_RESULT_OK
-        mTasksViewModel.getToastSubject().subscribe(mToastTestObserver);
+        mTasksViewModel.getToastEvent().subscribe(mToastTestObserver);
         mTasksViewModel.handleActivityResult(AddEditTaskActivity.REQUEST_CODE, AddEditTaskActivity.ADD_EDIT_RESULT_OK);
         mToastTestObserver.assertValue("TO-DO added");
     }
@@ -162,7 +162,7 @@ public class TasksViewModelTest {
     @Test
     public void handleActivityResult_deleteOk() {
         // When TaskDetailActivity sends a DELETE_RESULT_OK
-        mTasksViewModel.getToastSubject().subscribe(mToastTestObserver);
+        mTasksViewModel.getToastEvent().subscribe(mToastTestObserver);
         mTasksViewModel.handleActivityResult(AddEditTaskActivity.REQUEST_CODE, TaskDetailActivity.DELETE_RESULT_OK);
         mToastTestObserver.assertValue("Task was deleted");
     }

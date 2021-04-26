@@ -25,12 +25,12 @@ import android.widget.ListView;
 import androidx.appcompat.widget.PopupMenu;
 import androidx.appcompat.widget.Toolbar;
 import androidx.core.content.ContextCompat;
+import androidx.lifecycle.Observer;
 
 import com.example.android.architecture.blueprints.todoapp.BaseActivity;
 import com.example.android.architecture.blueprints.todoapp.R;
 import com.example.android.architecture.blueprints.todoapp.ScrollChildSwipeRefreshLayout;
 import com.example.android.architecture.blueprints.todoapp.addedittask.AddEditTaskActivity;
-import com.example.android.architecture.blueprints.todoapp.data.Task;
 import com.example.android.architecture.blueprints.todoapp.databinding.TasksActBinding;
 import com.example.android.architecture.blueprints.todoapp.taskdetail.TaskDetailActivity;
 
@@ -60,10 +60,10 @@ public class TasksActivity extends BaseActivity<TasksViewModel, TasksActBinding>
         setupRefreshLayout();
 
         // Subscribe to "open task" event
-        addSubject(mViewModel.getOpenTaskSubject().subscribe(this::openTaskDetails));
+        mViewModel.getOpenTaskEvent().observe(this, this::openTaskDetails);
 
         // Subscribe to "new task" event
-        addSubject(mViewModel.getNewTaskSubject().subscribe(o -> addNewTask()));
+        mViewModel.getNewTaskEvent().observe(this, o -> addNewTask());
 
         mViewModel.start();
     }

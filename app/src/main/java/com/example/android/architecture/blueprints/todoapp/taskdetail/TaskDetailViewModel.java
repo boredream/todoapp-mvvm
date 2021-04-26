@@ -26,7 +26,6 @@ import androidx.lifecycle.Transformations;
 
 import com.example.android.architecture.blueprints.todoapp.BaseViewModel;
 import com.example.android.architecture.blueprints.todoapp.Event;
-import com.example.android.architecture.blueprints.todoapp.R;
 import com.example.android.architecture.blueprints.todoapp.data.Task;
 import com.example.android.architecture.blueprints.todoapp.data.source.TasksRepository;
 
@@ -98,10 +97,10 @@ public class TaskDetailViewModel extends BaseViewModel {
         Task task = this.mTask.getValue();
         if (completed) {
             mTasksRepository.completeTask(task);
-            mToastSubject.onNext("Task marked complete");
+            mToastEvent.setValue("Task marked complete");
         } else {
             mTasksRepository.activateTask(task);
-            mToastSubject.onNext("Task marked active");
+            mToastEvent.setValue("Task marked active");
         }
     }
 

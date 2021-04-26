@@ -24,6 +24,7 @@ import androidx.lifecycle.Transformations;
 
 import com.example.android.architecture.blueprints.todoapp.BaseViewModel;
 import com.example.android.architecture.blueprints.todoapp.R;
+import com.example.android.architecture.blueprints.todoapp.SingleLiveEvent;
 import com.example.android.architecture.blueprints.todoapp.addedittask.AddEditTaskActivity;
 import com.example.android.architecture.blueprints.todoapp.data.Task;
 import com.example.android.architecture.blueprints.todoapp.data.source.TasksRepository;
@@ -34,7 +35,6 @@ import java.util.List;
 
 import io.reactivex.SingleObserver;
 import io.reactivex.disposables.Disposable;
-import io.reactivex.subjects.PublishSubject;
 
 
 /**
@@ -63,9 +63,9 @@ public class TasksViewModel extends BaseViewModel {
     // Not used at the moment
     private final MutableLiveData<Boolean> mIsDataLoadingError = new MutableLiveData<>();
 
-    private final PublishSubject<String> mOpenTaskSubject;
+    private final SingleLiveEvent<String> mOpenTaskEvent = new SingleLiveEvent<>();
 
-    private final PublishSubject<Object> mNewTaskSubject;
+    private final SingleLiveEvent<Object> mNewTaskEvent = new SingleLiveEvent<>();
 
     // This LiveData depends on another so we can use a transformation.
     public final LiveData<Boolean> empty = Transformations.map(mItems,
@@ -79,8 +79,6 @@ public class TasksViewModel extends BaseViewModel {
 
     public TasksViewModel(TasksRepository repository) {
         mTasksRepository = repository;
-        mOpenTaskSubject = PublishSubject.create();
-        mNewTaskSubject = PublishSubject.create();
 
         // Set initial state
         setFiltering(TasksFilterType.ALL_TASKS);
@@ -130,7 +128,7 @@ public class TasksViewModel extends BaseViewModel {
 
     public void clearCompletedTasks() {
         mTasksRepository.clearCompletedTasks().subscribe();
-        mToastSubject.onNext("Completed tasks cleared");
+        mToastEvent.setValue("Completed tasks cleared");
         loadTasks(false, false);
     }
 
@@ -138,10 +136,10 @@ public class TasksViewModel extends BaseViewModel {
         // Notify repository
         if (completed) {
             mTasksRepository.completeTask(task);
-            mToastSubject.onNext("Task marked complete");
+            mToastEvent.setValue("Task marked complete");
         } else {
             mTasksRepository.activateTask(task);
-            mToastSubject.onNext("Task marked active");
+            mToastEvent.setValue("Task marked active");
         }
     }
 
@@ -167,33 +165,33 @@ public class TasksViewModel extends BaseViewModel {
         return mItems;
     }
 
-    public PublishSubject<String> getOpenTaskSubject() {
-        return mOpenTaskSubject;
+    public SingleLiveEvent<String> getOpenTaskEvent() {
+        return mOpenTaskEvent;
     }
 
-    public PublishSubject<Object> getNewTaskSubject() {
-        return mNewTaskSubject;
+    public SingleLiveEvent<Object> getNewTaskEvent() {
+        return mNewTaskEvent;
     }
 
     public void addNewTask() {
-        mNewTaskSubject.onNext(new Object());
+        mNewTaskEvent.setValue(new Object());
     }
 
     void openTask(String taskId) {
-        mOpenTaskSubject.onNext(taskId);
+        mOpenTaskEvent.setValue(taskId);
     }
 
     void handleActivityResult(int requestCode, int resultCode) {
         if (AddEditTaskActivity.REQUEST_CODE == requestCode) {
             switch (resultCode) {
                 case TaskDetailActivity.EDIT_RESULT_OK:
-                    mToastSubject.onNext("TO-DO saved");
+                    mToastEvent.setValue("TO-DO saved");
                     break;
                 case AddEditTaskActivity.ADD_EDIT_RESULT_OK:
-                    mToastSubject.onNext("TO-DO added");
+                    mToastEvent.setValue("TO-DO added");
                     break;
                 case TaskDetailActivity.DELETE_RESULT_OK:
-                    mToastSubject.onNext("Task was deleted");
+                    mToastEvent.setValue("Task was deleted");
                     break;
             }
         }
