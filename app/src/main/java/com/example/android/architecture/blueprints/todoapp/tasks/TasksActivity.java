@@ -107,7 +107,7 @@ public class TasksActivity extends BaseActivity<TasksViewModel, TasksActBinding>
                 showFilteringPopUpMenu();
                 break;
             case R.id.menu_refresh:
-                mViewModel.loadTasks(true);
+                mViewModel.loadTasks();
                 break;
         }
         return true;
@@ -129,7 +129,7 @@ public class TasksActivity extends BaseActivity<TasksViewModel, TasksActBinding>
                     mViewModel.setFiltering(TasksFilterType.ALL_TASKS);
                     break;
             }
-            mViewModel.loadTasks(false);
+            mViewModel.loadTasks();
             return true;
         });
 

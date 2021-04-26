@@ -83,16 +83,10 @@ public class TaskDetailActivity extends BaseActivity<TaskDetailViewModel, Taskde
 
     private void subscribeToNavigationChanges() {
         // The activity observes the navigation commands in the ViewModel
-        mViewModel.getEditTaskCommand().observe(this, taskEvent -> {
-            if (taskEvent.getContentIfNotHandled() != null) {
-                TaskDetailActivity.this.onStartEditTask(taskId);
-            }
-        });
-        mViewModel.getDeleteTaskCommand().observe(this, taskEvent -> {
-            if (taskEvent.getContentIfNotHandled() != null) {
-                TaskDetailActivity.this.onTaskDeleted();
-            }
-        });
+        mViewModel.getEditTaskCommand().observe(this, event ->
+                TaskDetailActivity.this.onStartEditTask(taskId));
+        mViewModel.getDeleteTaskCommand().observe(this, event ->
+                TaskDetailActivity.this.onTaskDeleted());
     }
 
     @Override

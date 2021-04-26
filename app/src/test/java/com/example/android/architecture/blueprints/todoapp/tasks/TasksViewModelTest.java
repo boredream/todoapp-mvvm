@@ -37,10 +37,10 @@ import java.util.ArrayList;
 import java.util.List;
 
 import io.reactivex.Single;
-import io.reactivex.observers.TestObserver;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 import static org.mockito.Mockito.when;
 
@@ -63,10 +63,6 @@ public class TasksViewModelTest {
 
     private TasksViewModel mTasksViewModel;
 
-    private TestObserver<String> mToastTestObserver;
-
-    private TestObserver<Object> mNewTaskTestObserver;
-
     @Before
     public void setupTasksViewModel() {
         // Mockito has a very convenient way to inject mocks by using the @Mock annotation. To
@@ -75,8 +71,6 @@ public class TasksViewModelTest {
 
         // Get a reference to the class under test
         mTasksViewModel = new TasksViewModel(mTasksRepository);
-        mToastTestObserver = new TestObserver<>();
-        mNewTaskTestObserver = new TestObserver<>();
 
         // We initialise the tasks to 3, with one active and two completed
         TASKS = Lists.newArrayList(new Task("Title1", "Description1"),
@@ -121,50 +115,44 @@ public class TasksViewModelTest {
 
     @SuppressWarnings("unchecked")
     @Test
-    public void clickOnFab_ShowsAddTaskUi() throws InterruptedException {
-        mTasksViewModel.getNewTaskEvent().subscribe(mNewTaskTestObserver);
-
+    public void clickOnFab_ShowsAddTaskUi() {
         // When adding a new task
         mTasksViewModel.addNewTask();
 
         // Then the event is triggered
-        mNewTaskTestObserver.assertSubscribed();
+        assertNotNull(mTasksViewModel.getNewTaskEvent().getValue());
     }
 
     @Test
     public void clearCompletedTasks_ClearsTasks() {
         when(mTasksRepository.clearCompletedTasks()).thenReturn(Single.just("ok"));
         when(mTasksRepository.getTasks()).thenReturn(Single.just(new ArrayList<>()));
-        mTasksViewModel.getToastEvent().subscribe(mToastTestObserver);
         mTasksViewModel.clearCompletedTasks();
 
         // And data loaded
-        mToastTestObserver.assertValue("Completed tasks cleared");
+        assertEquals("Completed tasks cleared", mTasksViewModel.getToastEvent().getValue());
         assertTrue(mTasksViewModel.getItems().getValue().isEmpty());
     }
 
     @Test
     public void handleActivityResult_editOK() {
         // When TaskDetailActivity sends a EDIT_RESULT_OK
-        mTasksViewModel.getToastEvent().subscribe(mToastTestObserver);
         mTasksViewModel.handleActivityResult(AddEditTaskActivity.REQUEST_CODE, TaskDetailActivity.EDIT_RESULT_OK);
-        mToastTestObserver.assertValue("TO-DO saved");
+        assertEquals("TO-DO saved", mTasksViewModel.getToastEvent().getValue());
     }
 
     @Test
     public void handleActivityResult_addEditOK() {
         // When TaskDetailActivity sends a EDIT_RESULT_OK
-        mTasksViewModel.getToastEvent().subscribe(mToastTestObserver);
         mTasksViewModel.handleActivityResult(AddEditTaskActivity.REQUEST_CODE, AddEditTaskActivity.ADD_EDIT_RESULT_OK);
-        mToastTestObserver.assertValue("TO-DO added");
+        assertEquals("TO-DO added", mTasksViewModel.getToastEvent().getValue());
     }
 
     @Test
     public void handleActivityResult_deleteOk() {
         // When TaskDetailActivity sends a DELETE_RESULT_OK
-        mTasksViewModel.getToastEvent().subscribe(mToastTestObserver);
         mTasksViewModel.handleActivityResult(AddEditTaskActivity.REQUEST_CODE, TaskDetailActivity.DELETE_RESULT_OK);
-        mToastTestObserver.assertValue("Task was deleted");
+        assertEquals("Task was deleted", mTasksViewModel.getToastEvent().getValue());
     }
 
     @Test

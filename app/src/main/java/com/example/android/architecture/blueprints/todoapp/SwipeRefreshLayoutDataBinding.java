@@ -31,12 +31,7 @@ public class SwipeRefreshLayoutDataBinding {
     @BindingAdapter("android:onRefresh")
     public static void setSwipeRefreshLayoutOnRefreshListener(ScrollChildSwipeRefreshLayout view,
             final TasksViewModel viewModel) {
-        view.setOnRefreshListener(new SwipeRefreshLayout.OnRefreshListener() {
-            @Override
-            public void onRefresh() {
-                viewModel.loadTasks(true);
-            }
-        });
+        view.setOnRefreshListener(() -> viewModel.loadTasks());
     }
 
 }

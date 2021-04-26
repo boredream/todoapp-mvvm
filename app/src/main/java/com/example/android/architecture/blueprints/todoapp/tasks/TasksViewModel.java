@@ -68,14 +68,7 @@ public class TasksViewModel extends BaseViewModel {
     private final SingleLiveEvent<Object> mNewTaskEvent = new SingleLiveEvent<>();
 
     // This LiveData depends on another so we can use a transformation.
-    public final LiveData<Boolean> empty = Transformations.map(mItems,
-            new androidx.arch.core.util.Function<List<Task>, Boolean>() {
-                @Override
-                public Boolean apply(List<Task> input) {
-                    return input.isEmpty();
-
-                }
-            });
+    public final LiveData<Boolean> empty = Transformations.map(mItems, List::isEmpty);
 
     public TasksViewModel(TasksRepository repository) {
         mTasksRepository = repository;
@@ -85,11 +78,7 @@ public class TasksViewModel extends BaseViewModel {
     }
 
     public void start() {
-        loadTasks(false);
-    }
-
-    public void loadTasks(boolean forceUpdate) {
-        loadTasks(forceUpdate, true);
+        loadTasks();
     }
 
     /**
@@ -129,7 +118,7 @@ public class TasksViewModel extends BaseViewModel {
     public void clearCompletedTasks() {
         mTasksRepository.clearCompletedTasks().subscribe();
         mToastEvent.setValue("Completed tasks cleared");
-        loadTasks(false, false);
+        loadTasks();
     }
 
     public void completeTask(Task task, boolean completed) {
@@ -194,28 +183,21 @@ public class TasksViewModel extends BaseViewModel {
                     mToastEvent.setValue("Task was deleted");
                     break;
             }
+            loadTasks();
         }
     }
 
-    private void loadTasks(boolean forceUpdate, final boolean showLoadingUI) {
-        if (forceUpdate) {
-            mTasksRepository.refreshTasks();
-        }
-
+    public void loadTasks() {
         mTasksRepository.getTasks()
                 .subscribe(new SingleObserver<List<Task>>() {
                     @Override
                     public void onSubscribe(Disposable d) {
-                        if (showLoadingUI) {
-                            mDataLoading.setValue(true);
-                        }
+                        mDataLoading.setValue(true);
                     }
 
                     @Override
                     public void onSuccess(List<Task> tasks) {
-                        if (showLoadingUI) {
-                            mDataLoading.setValue(false);
-                        }
+                        mDataLoading.setValue(false);
                         mIsDataLoadingError.setValue(false);
 
                         List<Task> tasksToShow = new ArrayList<>();
@@ -239,9 +221,7 @@ public class TasksViewModel extends BaseViewModel {
                                     break;
                             }
                         }
-                        if (showLoadingUI) {
-                            mDataLoading.setValue(false);
-                        }
+                        mDataLoading.setValue(false);
                         mIsDataLoadingError.setValue(false);
 
                         List<Task> itemsValue = new ArrayList<>(tasksToShow);
@@ -250,9 +230,7 @@ public class TasksViewModel extends BaseViewModel {
 
                     @Override
                     public void onError(Throwable e) {
-                        if (showLoadingUI) {
-                            mDataLoading.setValue(false);
-                        }
+                        mDataLoading.setValue(false);
                         mIsDataLoadingError.setValue(true);
                         e.printStackTrace();
                     }

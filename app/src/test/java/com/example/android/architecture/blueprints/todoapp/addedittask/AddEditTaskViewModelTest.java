@@ -29,10 +29,11 @@ import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 
 import io.reactivex.Single;
-import io.reactivex.observers.TestObserver;
 
 import static org.hamcrest.Matchers.is;
+import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertThat;
+import static org.junit.Assert.assertTrue;
 import static org.mockito.Matchers.any;
 import static org.mockito.Mockito.when;
 
@@ -50,8 +51,6 @@ public class AddEditTaskViewModelTest {
 
     private AddEditTaskViewModel mAddEditTaskViewModel;
 
-    private TestObserver<Boolean> mTaskUpdatedTestObserver;
-
     @Before
     public void setupAddEditTaskViewModel() {
         // Mockito has a very convenient way to inject mocks by using the @Mock annotation. To
@@ -60,21 +59,18 @@ public class AddEditTaskViewModelTest {
 
         // Get a reference to the class under test
         mAddEditTaskViewModel = new AddEditTaskViewModel(mTasksRepository);
-        mTaskUpdatedTestObserver = new TestObserver<>();
     }
 
     @Test
     public void saveNewTask() {
         when(mTasksRepository.saveTask(any(Task.class))).thenReturn(Single.just("ok"));
-        mAddEditTaskViewModel.getTaskUpdatedEvent().subscribe(mTaskUpdatedTestObserver);
 
         mAddEditTaskViewModel.start(null);
         mAddEditTaskViewModel.description.setValue("Some Task Description");
         mAddEditTaskViewModel.title.setValue("New Task Title");
         mAddEditTaskViewModel.saveTask();
 
-        mTaskUpdatedTestObserver.assertSubscribed();
-        mTaskUpdatedTestObserver.assertValue(true);
+        assertTrue(mAddEditTaskViewModel.getTaskUpdatedEvent().getValue());
     }
 
     @Test
@@ -83,7 +79,6 @@ public class AddEditTaskViewModelTest {
         Task testTask = new Task("TITLE", "DESCRIPTION", "1");
 
         // When the ViewModel is asked to populate an existing task
-        mAddEditTaskViewModel.getTaskUpdatedEvent().subscribe(mTaskUpdatedTestObserver);
         when(mTasksRepository.getTask(testTask.getId())).thenReturn(Single.just(testTask));
         mAddEditTaskViewModel.start(testTask.getId());
 
@@ -99,8 +94,7 @@ public class AddEditTaskViewModelTest {
         mAddEditTaskViewModel.title.setValue(updateStr);
         mAddEditTaskViewModel.saveTask();
 
-        mTaskUpdatedTestObserver.assertSubscribed();
-        mTaskUpdatedTestObserver.assertValue(false);
+        assertFalse(mAddEditTaskViewModel.getTaskUpdatedEvent().getValue());
         assertThat(mAddEditTaskViewModel.title.getValue(), is(updateStr));
         assertThat(mAddEditTaskViewModel.description.getValue(), is(testTask.getDescription()));
     }

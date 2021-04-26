@@ -25,7 +25,7 @@ import androidx.lifecycle.MutableLiveData;
 import androidx.lifecycle.Transformations;
 
 import com.example.android.architecture.blueprints.todoapp.BaseViewModel;
-import com.example.android.architecture.blueprints.todoapp.Event;
+import com.example.android.architecture.blueprints.todoapp.SingleLiveEvent;
 import com.example.android.architecture.blueprints.todoapp.data.Task;
 import com.example.android.architecture.blueprints.todoapp.data.source.TasksRepository;
 
@@ -39,9 +39,9 @@ public class TaskDetailViewModel extends BaseViewModel {
 
     private final MutableLiveData<Boolean> mIsDataAvailable = new MutableLiveData<>();
 
-    private final MutableLiveData<Event<Object>> mEditTaskCommand = new MutableLiveData<>();
+    private final SingleLiveEvent<Object> mEditTaskCommand = new SingleLiveEvent<>();
 
-    private final MutableLiveData<Event<Object>> mDeleteTaskCommand = new MutableLiveData<>();
+    private final MutableLiveData<Object> mDeleteTaskCommand = new SingleLiveEvent<>();
 
     private final TasksRepository mTasksRepository;
 
@@ -61,20 +61,34 @@ public class TaskDetailViewModel extends BaseViewModel {
 
     public void deleteTask() {
         if (mTask.getValue() != null) {
-            mTasksRepository.deleteTask(mTask.getValue().getId());
-            mDeleteTaskCommand.setValue(new Event<>(new Object()));
+            mTasksRepository.deleteTask(mTask.getValue().getId()).subscribe(new SingleObserver<String>() {
+                @Override
+                public void onSubscribe(Disposable d) {
+
+                }
+
+                @Override
+                public void onSuccess(String s) {
+                    mDeleteTaskCommand.setValue(new Object());
+                }
+
+                @Override
+                public void onError(Throwable e) {
+
+                }
+            });
         }
     }
 
     public void editTask() {
-        mEditTaskCommand.setValue(new Event<>(new Object()));
+        mEditTaskCommand.setValue(new Object());
     }
 
-    public MutableLiveData<Event<Object>> getEditTaskCommand() {
+    public MutableLiveData<Object> getEditTaskCommand() {
         return mEditTaskCommand;
     }
 
-    public MutableLiveData<Event<Object>> getDeleteTaskCommand() {
+    public MutableLiveData<Object> getDeleteTaskCommand() {
         return mDeleteTaskCommand;
     }
 
