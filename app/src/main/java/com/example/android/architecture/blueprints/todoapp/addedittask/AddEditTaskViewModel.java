@@ -21,12 +21,12 @@ import androidx.databinding.ObservableField;
 import androidx.lifecycle.MutableLiveData;
 
 import com.example.android.architecture.blueprints.todoapp.BaseViewModel;
+import com.example.android.architecture.blueprints.todoapp.SimpleSingleObserver;
 import com.example.android.architecture.blueprints.todoapp.SingleLiveEvent;
 import com.example.android.architecture.blueprints.todoapp.data.Task;
 import com.example.android.architecture.blueprints.todoapp.data.source.TasksRepository;
 
-import io.reactivex.SingleObserver;
-import io.reactivex.disposables.Disposable;
+import java.util.UUID;
 
 /**
  * ViewModel for the Add/Edit screen.
@@ -76,62 +76,33 @@ public class AddEditTaskViewModel extends BaseViewModel {
         mIsNewTask = false;
 
         mTasksRepository.getTask(taskId)
-                .subscribe(new SingleObserver<Task>() {
-                    @Override
-                    public void onSubscribe(Disposable d) {
-                        mDataLoading.setValue(true);
-                    }
-
-                    @Override
-                    public void onSuccess(Task task) {
-                        title.setValue(task.getTitle());
-                        description.setValue(task.getDescription());
-                        mTaskCompleted = task.isCompleted();
-                        mDataLoading.setValue(false);
-                    }
-
-                    @Override
-                    public void onError(Throwable e) {
-                        mDataLoading.setValue(false);
-                    }
+                .compose(composeCommon())
+                .subscribe((SimpleSingleObserver<Task>) task -> {
+                    title.setValue(task.getTitle());
+                    description.setValue(task.getDescription());
+                    mTaskCompleted = task.isCompleted();
                 });
     }
 
     // Called when clicking on fab.
     void saveTask() {
-        Task task;
-
-        if (mIsNewTask || mTaskId == null) {
-            task = new Task(title.getValue(), description.getValue());
-        } else {
-            task = new Task(title.getValue(), description.getValue(), mTaskId, mTaskCompleted);
-        }
+        Task task = new Task();
+        task.setId(mTaskId);
+        task.setTitle(title.getValue());
+        task.setDescription(description.getValue());
+        task.setCompleted(mTaskCompleted);
 
         if (task.isEmpty()) {
             mToastEvent.setValue("TO DOs cannot be empty");
             return;
         }
 
-        mTasksRepository.saveTask(task)
-                .subscribe(new SingleObserver<String>() {
-                    @Override
-                    public void onSubscribe(Disposable d) {
-                        mDataLoading.setValue(true);
-                    }
+        if (mIsNewTask || mTaskId == null) {
+            task.setId(UUID.randomUUID().toString());
+        }
 
-                    @Override
-                    public void onSuccess(String s) {
-                        mTaskUpdatedEvent.setValue(mIsNewTask);
-                        mDataLoading.setValue(false);
-                    }
-
-                    @Override
-                    public void onError(Throwable e) {
-                        mDataLoading.setValue(false);
-                        String action = mIsNewTask ? "add" : "update";
-                        mToastEvent.setValue(action + " error = " + e.getMessage());
-                    }
-                });
+        mTasksRepository.saveTask(task).compose(composeCommon())
+                .subscribe((SimpleSingleObserver<String>) s -> mTaskUpdatedEvent.setValue(mIsNewTask));
     }
 
 }

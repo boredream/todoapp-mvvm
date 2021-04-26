@@ -20,6 +20,8 @@ import androidx.lifecycle.LiveData;
 import androidx.lifecycle.MutableLiveData;
 import androidx.lifecycle.ViewModel;
 
+import io.reactivex.SingleTransformer;
+
 
 public class BaseViewModel extends ViewModel {
 
@@ -35,5 +37,20 @@ public class BaseViewModel extends ViewModel {
 
     public SingleLiveEvent<String> getToastEvent() {
         return mToastEvent;
+    }
+
+    protected <T> SingleTransformer<T, T> composeCommon() {
+        return upstream -> upstream.compose(composeErrorToast())
+                .compose(composeDataLoading());
+    }
+
+    protected <T> SingleTransformer<T, T> composeErrorToast() {
+        return upstream -> upstream.doOnSubscribe(disposable -> mToastEvent.setValue("doOnSubscribe"));
+    }
+
+    protected <T> SingleTransformer<T, T> composeDataLoading() {
+        return upstream -> upstream.doOnSubscribe(disposable -> mDataLoading.setValue(true))
+                .doOnSuccess(disposable -> mDataLoading.setValue(false))
+                .doOnError(throwable -> mDataLoading.setValue(false));
     }
 }

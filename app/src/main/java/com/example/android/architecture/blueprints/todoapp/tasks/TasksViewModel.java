@@ -24,6 +24,7 @@ import androidx.lifecycle.Transformations;
 
 import com.example.android.architecture.blueprints.todoapp.BaseViewModel;
 import com.example.android.architecture.blueprints.todoapp.R;
+import com.example.android.architecture.blueprints.todoapp.SimpleSingleObserver;
 import com.example.android.architecture.blueprints.todoapp.SingleLiveEvent;
 import com.example.android.architecture.blueprints.todoapp.addedittask.AddEditTaskActivity;
 import com.example.android.architecture.blueprints.todoapp.data.Task;
@@ -33,8 +34,6 @@ import com.example.android.architecture.blueprints.todoapp.taskdetail.TaskDetail
 import java.util.ArrayList;
 import java.util.List;
 
-import io.reactivex.SingleObserver;
-import io.reactivex.disposables.Disposable;
 import io.reactivex.functions.Function;
 
 
@@ -79,7 +78,7 @@ public class TasksViewModel extends BaseViewModel {
     }
 
     public void start() {
-        loadTasks();
+        loadTasks(false);
     }
 
     /**
@@ -122,17 +121,17 @@ public class TasksViewModel extends BaseViewModel {
     public void clearCompletedTasks() {
         mTasksRepository.clearCompletedTasks().subscribe();
         mToastEvent.setValue("Completed tasks cleared");
-        loadTasks();
+        loadTasks(false);
     }
 
     public void completeTask(Task task, boolean completed) {
         // Notify repository
         if (completed) {
-            mTasksRepository.completeTask(task);
-            mToastEvent.setValue("Task marked complete");
+            mTasksRepository.completeTask(task).compose(composeCommon())
+                    .subscribe((SimpleSingleObserver<String>) response -> mToastEvent.setValue("Task marked complete"));
         } else {
-            mTasksRepository.activateTask(task);
-            mToastEvent.setValue("Task marked active");
+            mTasksRepository.activateTask(task).compose(composeCommon())
+                    .subscribe((SimpleSingleObserver<String>) response -> mToastEvent.setValue("Task marked active"));
         }
     }
 
@@ -179,43 +178,29 @@ public class TasksViewModel extends BaseViewModel {
             switch (resultCode) {
                 case TaskDetailActivity.EDIT_RESULT_OK:
                     mToastEvent.setValue("TO-DO saved");
-                    loadTasks();
+                    loadTasks(true);
                     break;
                 case AddEditTaskActivity.ADD_EDIT_RESULT_OK:
                     mToastEvent.setValue("TO-DO added");
-                    loadTasks();
+                    loadTasks(true);
                     break;
                 case TaskDetailActivity.DELETE_RESULT_OK:
                     mToastEvent.setValue("Task was deleted");
-                    loadTasks();
+                    loadTasks(true);
                     break;
             }
         }
     }
 
-    public void loadTasks() {
+    public void loadTasks(boolean forceUpdate) {
+        if (forceUpdate) {
+            mTasksRepository.setCacheIsDirty(true);
+        }
+
         mTasksRepository.getTasks()
                 .map((Function<List<Task>, List<Task>>) this::filterList)
-                .subscribe(new SingleObserver<List<Task>>() {
-                    @Override
-                    public void onSubscribe(Disposable d) {
-                        mDataLoading.setValue(true);
-                    }
-
-                    @Override
-                    public void onSuccess(List<Task> tasks) {
-                        mDataLoading.setValue(false);
-                        mIsDataLoadingError.setValue(false);
-                        mItems.setValue(tasks);
-                    }
-
-                    @Override
-                    public void onError(Throwable e) {
-                        mDataLoading.setValue(false);
-                        mIsDataLoadingError.setValue(true);
-                        e.printStackTrace();
-                    }
-                });
+                .compose(composeCommon())
+                .subscribe((SimpleSingleObserver<List<Task>>) mItems::setValue);
     }
 
     private List<Task> filterList(List<Task> tasks) {

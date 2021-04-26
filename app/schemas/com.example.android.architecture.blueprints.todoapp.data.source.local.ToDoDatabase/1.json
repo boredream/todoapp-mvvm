@@ -2,32 +2,32 @@
   "formatVersion": 1,
   "database": {
     "version": 1,
-    "identityHash": "310fe3200b9e9f2fe3312316a1f0cd54",
+    "identityHash": "1bfa867ebf773546ef60ce6a1148a6da",
     "entities": [
       {
         "tableName": "tasks",
-        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`entryid` TEXT NOT NULL, `title` TEXT, `description` TEXT, `completed` INTEGER NOT NULL, PRIMARY KEY(`entryid`))",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`id` TEXT NOT NULL, `title` TEXT, `description` TEXT, `completed` INTEGER NOT NULL, PRIMARY KEY(`id`))",
         "fields": [
           {
-            "fieldPath": "mId",
-            "columnName": "entryid",
+            "fieldPath": "id",
+            "columnName": "id",
             "affinity": "TEXT",
             "notNull": true
           },
           {
-            "fieldPath": "mTitle",
+            "fieldPath": "title",
             "columnName": "title",
             "affinity": "TEXT",
             "notNull": false
           },
           {
-            "fieldPath": "mDescription",
+            "fieldPath": "description",
             "columnName": "description",
             "affinity": "TEXT",
             "notNull": false
           },
           {
-            "fieldPath": "mCompleted",
+            "fieldPath": "completed",
             "columnName": "completed",
             "affinity": "INTEGER",
             "notNull": true
@@ -35,7 +35,7 @@
         ],
         "primaryKey": {
           "columnNames": [
-            "entryid"
+            "id"
           ],
           "autoGenerate": false
         },
@@ -45,7 +45,7 @@
     ],
     "setupQueries": [
       "CREATE TABLE IF NOT EXISTS room_master_table (id INTEGER PRIMARY KEY,identity_hash TEXT)",
-      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, \"310fe3200b9e9f2fe3312316a1f0cd54\")"
+      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, \"1bfa867ebf773546ef60ce6a1148a6da\")"
     ]
   }
 }

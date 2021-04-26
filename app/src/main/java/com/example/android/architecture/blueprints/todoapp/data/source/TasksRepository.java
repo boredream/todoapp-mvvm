@@ -23,6 +23,7 @@ import com.example.android.architecture.blueprints.todoapp.data.source.local.Tas
 import com.example.android.architecture.blueprints.todoapp.util.EspressoIdlingResource;
 
 import java.util.ArrayList;
+import java.util.Iterator;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 
@@ -41,7 +42,7 @@ public class TasksRepository {
     private volatile static TasksRepository INSTANCE = null;
     private TasksDao mTasksDao;
 
-    // 只在拉取和获取时使用内存。其它情况如新增修改之后会重新拉取，因此这类操作不处理内存
+    // 只在get/delete/update时使用内存。其它情况如add之后会重新拉取，因此这类操作不处理内存。根据需求可自行决定。
     private List<Task> mCachedTasks;
     private boolean mCacheIsDirty;
 
@@ -76,7 +77,7 @@ public class TasksRepository {
     }
 
     public Single<List<Task>> getTasks() {
-        if(mCachedTasks != null && !mCacheIsDirty) {
+        if (mCachedTasks != null && !mCacheIsDirty) {
             return Single.just(mCachedTasks);
         }
 
@@ -89,7 +90,8 @@ public class TasksRepository {
     }
 
     public Single<String> saveTask(@NonNull final Task task) {
-        // TODO: 4/26/21 这类方法需要缓存操作吗？
+        // 新增后服务器一般会setId等操作，所以数据直接加入缓存有问题，应该重新拉取数据
+        // 不过，如果新增接口的response是服务器处理后的数据，则可以加入到缓存里，无需再次请求
 
         EspressoIdlingResource.increment(); // App is busy until further notice
         return Single.create((SingleOnSubscribe<String>) emitter -> {
@@ -104,6 +106,14 @@ public class TasksRepository {
         return Single.create((SingleOnSubscribe<String>) emitter -> {
             EspressoIdlingResource.decrement(); // Set app as idle.
             mTasksDao.updateCompleted(task.getId(), true);
+            if (mCachedTasks != null) {
+                for (Task cacheTask : mCachedTasks) {
+                    if(task.getId().equals(cacheTask.getId())) {
+                        cacheTask.setCompleted(true);
+                        break;
+                    }
+                }
+            }
             emitter.onSuccess("ok");
         }).compose(getSingleTransformer());
     }
@@ -113,6 +123,14 @@ public class TasksRepository {
         return Single.create((SingleOnSubscribe<String>) emitter -> {
             EspressoIdlingResource.decrement(); // Set app as idle.
             mTasksDao.updateCompleted(taskId, true);
+            if (mCachedTasks != null) {
+                for (Task cacheTask : mCachedTasks) {
+                    if(taskId.equals(cacheTask.getId())) {
+                        cacheTask.setCompleted(true);
+                        break;
+                    }
+                }
+            }
             emitter.onSuccess("ok");
         }).compose(getSingleTransformer());
     }
@@ -122,6 +140,14 @@ public class TasksRepository {
         return Single.create((SingleOnSubscribe<String>) emitter -> {
             EspressoIdlingResource.decrement(); // Set app as idle.
             mTasksDao.updateCompleted(task.getId(), false);
+            if (mCachedTasks != null) {
+                for (Task cacheTask : mCachedTasks) {
+                    if(task.getId().equals(cacheTask.getId())) {
+                        cacheTask.setCompleted(false);
+                        break;
+                    }
+                }
+            }
             emitter.onSuccess("ok");
         }).compose(getSingleTransformer());
     }
@@ -131,6 +157,14 @@ public class TasksRepository {
         return Single.create((SingleOnSubscribe<String>) emitter -> {
             EspressoIdlingResource.decrement(); // Set app as idle.
             mTasksDao.updateCompleted(taskId, false);
+            if (mCachedTasks != null) {
+                for (Task cacheTask : mCachedTasks) {
+                    if(taskId.equals(cacheTask.getId())) {
+                        cacheTask.setCompleted(true);
+                        break;
+                    }
+                }
+            }
             emitter.onSuccess("ok");
         }).compose(getSingleTransformer());
     }
@@ -140,14 +174,23 @@ public class TasksRepository {
         return Single.create((SingleOnSubscribe<String>) emitter -> {
             EspressoIdlingResource.decrement(); // Set app as idle.
             mTasksDao.deleteCompletedTasks();
+            if (mCachedTasks != null) {
+                Iterator<Task> iterator = mCachedTasks.iterator();
+                for(;iterator.hasNext();) {
+                    Task next = iterator.next();
+                    if(next.isCompleted()) {
+                        iterator.remove();
+                    }
+                }
+            }
             emitter.onSuccess("ok");
         }).compose(getSingleTransformer());
     }
 
     public Single<Task> getTask(@NonNull final String taskId) {
-        if(mCachedTasks != null && !mCacheIsDirty) {
+        if (mCachedTasks != null && !mCacheIsDirty) {
             for (Task task : mCachedTasks) {
-                if(taskId.equals(task.getId())) {
+                if (taskId.equals(task.getId())) {
                     return Single.just(task);
                 }
             }
@@ -165,6 +208,7 @@ public class TasksRepository {
         return Single.create((SingleOnSubscribe<String>) emitter -> {
             EspressoIdlingResource.decrement(); // Set app as idle.
             mTasksDao.deleteTasks();
+            refreshCache(new ArrayList<>());
             emitter.onSuccess("ok");
         }).compose(getSingleTransformer());
     }
@@ -174,6 +218,16 @@ public class TasksRepository {
         return Single.create((SingleOnSubscribe<String>) emitter -> {
             EspressoIdlingResource.decrement(); // Set app as idle.
             mTasksDao.deleteTaskById(taskId);
+            if (mCachedTasks != null) {
+                Iterator<Task> iterator = mCachedTasks.iterator();
+                for(;iterator.hasNext();) {
+                    Task next = iterator.next();
+                    if(taskId.equals(next.getId())) {
+                        iterator.remove();
+                        break;
+                    }
+                }
+            }
             emitter.onSuccess("ok");
         }).compose(getSingleTransformer());
     }
@@ -183,7 +237,7 @@ public class TasksRepository {
             mCachedTasks = new ArrayList<>();
         }
         mCachedTasks.clear();
-        mCachedTasks.addAll(tasks);
+        if (tasks != null) mCachedTasks.addAll(tasks);
         mCacheIsDirty = false;
     }
 }

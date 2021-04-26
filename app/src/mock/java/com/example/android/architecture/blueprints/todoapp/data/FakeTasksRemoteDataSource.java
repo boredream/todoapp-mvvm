@@ -16,15 +16,15 @@
 
 package com.example.android.architecture.blueprints.todoapp.data;
 
+import androidx.annotation.NonNull;
+import androidx.annotation.VisibleForTesting;
+
 import com.example.android.architecture.blueprints.todoapp.data.source.TasksDataSource;
 import com.google.common.collect.Lists;
 
 import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.Map;
-
-import androidx.annotation.NonNull;
-import androidx.annotation.VisibleForTesting;
 
 /**
  * Implementation of a remote data source with static access to the data for easy testing.
@@ -36,7 +36,8 @@ public class FakeTasksRemoteDataSource implements TasksDataSource {
     private static final Map<String, Task> TASKS_SERVICE_DATA = new LinkedHashMap<>();
 
     // Prevent direct instantiation.
-    private FakeTasksRemoteDataSource() {}
+    private FakeTasksRemoteDataSource() {
+    }
 
     public static FakeTasksRemoteDataSource getInstance() {
         if (INSTANCE == null) {
@@ -63,8 +64,8 @@ public class FakeTasksRemoteDataSource implements TasksDataSource {
 
     @Override
     public void completeTask(@NonNull Task task) {
-        Task completedTask = new Task(task.getTitle(), task.getDescription(), task.getId(), true);
-        TASKS_SERVICE_DATA.put(task.getId(), completedTask);
+        task.setCompleted(true);
+        TASKS_SERVICE_DATA.put(task.getId(), task);
     }
 
     @Override
@@ -74,8 +75,8 @@ public class FakeTasksRemoteDataSource implements TasksDataSource {
 
     @Override
     public void activateTask(@NonNull Task task) {
-        Task activeTask = new Task(task.getTitle(), task.getDescription(), task.getId());
-        TASKS_SERVICE_DATA.put(task.getId(), activeTask);
+        task.setCompleted(false);
+        TASKS_SERVICE_DATA.put(task.getId(), task);
     }
 
     @Override

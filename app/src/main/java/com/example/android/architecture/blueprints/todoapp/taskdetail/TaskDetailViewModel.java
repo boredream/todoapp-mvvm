@@ -24,12 +24,10 @@ import androidx.lifecycle.MutableLiveData;
 import androidx.lifecycle.Transformations;
 
 import com.example.android.architecture.blueprints.todoapp.BaseViewModel;
+import com.example.android.architecture.blueprints.todoapp.SimpleSingleObserver;
 import com.example.android.architecture.blueprints.todoapp.SingleLiveEvent;
 import com.example.android.architecture.blueprints.todoapp.data.Task;
 import com.example.android.architecture.blueprints.todoapp.data.source.TasksRepository;
-
-import io.reactivex.SingleObserver;
-import io.reactivex.disposables.Disposable;
 
 
 public class TaskDetailViewModel extends BaseViewModel {
@@ -53,23 +51,8 @@ public class TaskDetailViewModel extends BaseViewModel {
 
     public void deleteTask() {
         if (mTask.getValue() != null) {
-            mTasksRepository.deleteTask(mTask.getValue().getId()).subscribe(new SingleObserver<String>() {
-                @Override
-                public void onSubscribe(Disposable d) {
-                    mDataLoading.setValue(true);
-                }
-
-                @Override
-                public void onSuccess(String s) {
-                    mDataLoading.setValue(false);
-                    mDeleteTaskCommand.setValue(new Object());
-                }
-
-                @Override
-                public void onError(Throwable e) {
-                    mDataLoading.setValue(false);
-                }
-            });
+            mTasksRepository.deleteTask(mTask.getValue().getId()).compose(composeCommon())
+                    .subscribe((SimpleSingleObserver<String>) response -> mDeleteTaskCommand.setValue(new Object()));
         }
     }
 
@@ -113,26 +96,21 @@ public class TaskDetailViewModel extends BaseViewModel {
 
     @SuppressLint("CheckResult")
     public void start(String taskId) {
-        if(taskId == null) return;
+        if (taskId == null) return;
 
         mTasksRepository.getTask(taskId)
-                .subscribe(new SingleObserver<Task>() {
-                    @Override
-                    public void onSubscribe(Disposable d) {
-                        mDataLoading.setValue(true);
-                    }
+                .compose(composeCommon())
+                .subscribe(new SimpleSingleObserver<Task>() {
 
                     @Override
                     public void onSuccess(Task task) {
                         mTask.setValue(task);
                         mIsDataAvailable.setValue(task != null);
-                        mDataLoading.setValue(false);
                     }
 
                     @Override
                     public void onError(Throwable e) {
                         mTask.setValue(null);
-                        mDataLoading.setValue(false);
                         mIsDataAvailable.setValue(false);
                     }
                 });

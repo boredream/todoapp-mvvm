@@ -106,7 +106,7 @@ public class TasksActivity extends BaseActivity<TasksViewModel, TasksActBinding>
                 showFilteringPopUpMenu();
                 break;
             case R.id.menu_refresh:
-                mViewModel.loadTasks();
+                mViewModel.loadTasks(true);
                 break;
         }
         return true;
