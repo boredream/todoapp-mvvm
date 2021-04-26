@@ -19,6 +19,7 @@ package com.example.android.architecture.blueprints.todoapp.taskdetail;
 import android.annotation.SuppressLint;
 
 import androidx.annotation.Nullable;
+import androidx.arch.core.util.Function;
 import androidx.lifecycle.LiveData;
 import androidx.lifecycle.MutableLiveData;
 import androidx.lifecycle.Transformations;
@@ -43,7 +44,7 @@ public class TaskDetailViewModel extends BaseViewModel {
     private final TasksRepository mTasksRepository;
 
     // This LiveData depends on another so we can use a transformation.
-    public final LiveData<Boolean> completed = Transformations.map(mTask, Task::isCompleted);
+    public final LiveData<Boolean> completed = Transformations.map(mTask, input -> input != null && input.isCompleted());
 
     public TaskDetailViewModel(TasksRepository tasksRepository) {
         mTasksRepository = tasksRepository;
@@ -81,16 +82,13 @@ public class TaskDetailViewModel extends BaseViewModel {
     }
 
     public void setCompleted(boolean completed) {
-        if (mDataLoading.getValue()) {
-            return;
-        }
         Task task = this.mTask.getValue();
         if (completed) {
-            mTasksRepository.completeTask(task);
-            mToastEvent.setValue("Task marked complete");
+            mTasksRepository.completeTask(task).compose(composeCommon())
+                    .subscribe((SimpleSingleObserver<String>) response -> mToastEvent.setValue("Task marked complete"));
         } else {
-            mTasksRepository.activateTask(task);
-            mToastEvent.setValue("Task marked active");
+            mTasksRepository.activateTask(task).compose(composeCommon())
+                    .subscribe((SimpleSingleObserver<String>) response -> mToastEvent.setValue("Task marked active"));
         }
     }
 
@@ -114,10 +112,5 @@ public class TaskDetailViewModel extends BaseViewModel {
                         mIsDataAvailable.setValue(false);
                     }
                 });
-    }
-
-    @Nullable
-    protected String getTaskId() {
-        return mTask.getValue().getId();
     }
 }

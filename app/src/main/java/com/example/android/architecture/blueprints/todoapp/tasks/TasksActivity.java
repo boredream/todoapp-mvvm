@@ -128,7 +128,7 @@ public class TasksActivity extends BaseActivity<TasksViewModel, TasksActBinding>
                     mViewModel.setFiltering(TasksFilterType.ALL_TASKS);
                     break;
             }
-            mViewModel.refreshFilterList();
+            mViewModel.loadTasks(false);
             return true;
         });
 

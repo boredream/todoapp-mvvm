@@ -20,26 +20,24 @@ package com.example.android.architecture.blueprints.todoapp.taskdetail;
 import android.app.Application;
 import android.content.res.Resources;
 
+import androidx.arch.core.executor.testing.InstantTaskExecutorRule;
+
 import com.example.android.architecture.blueprints.todoapp.R;
 import com.example.android.architecture.blueprints.todoapp.data.Task;
 import com.example.android.architecture.blueprints.todoapp.data.source.TasksRepository;
 
+import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 
-import androidx.arch.core.executor.testing.InstantTaskExecutorRule;
-
 import io.reactivex.Single;
 
 import static junit.framework.Assert.assertEquals;
-import static junit.framework.Assert.assertFalse;
-import static org.hamcrest.CoreMatchers.nullValue;
-import static org.hamcrest.MatcherAssert.assertThat;
-import static org.hamcrest.core.Is.is;
-import static org.mockito.Matchers.eq;
+import static junit.framework.Assert.assertNotNull;
+import static org.junit.Assert.assertFalse;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -79,7 +77,10 @@ public class TaskDetailViewModelTest {
 
         setupContext();
 
-        mTask = new Task(TITLE_TEST, DESCRIPTION_TEST);
+        mTask = new Task();
+        mTask.setId("1");
+        mTask.setTitle(TITLE_TEST);
+        mTask.setDescription(DESCRIPTION_TEST);
 
         // Get a reference to the class under test
         mTaskDetailViewModel = new TaskDetailViewModel(mTasksRepository);
@@ -104,62 +105,54 @@ public class TaskDetailViewModelTest {
     @Test
     public void deleteTask() {
         setupViewModelRepository();
+        when(mTasksRepository.deleteTask(mTask.getId())).thenReturn(Single.just("ok"));
 
         // When the deletion of a task is requested
         mTaskDetailViewModel.deleteTask();
 
         // Then the repository is notified
-        verify(mTasksRepository).deleteTask(mTask.getId());
+        assertNotNull(mTaskDetailViewModel.getDeleteTaskCommand().getValue());
+    }
+
+    @Test
+    public void completeTask() {
+        setupViewModelRepository();
+        when(mTasksRepository.completeTask(mTask)).thenReturn(Single.just("ok"));
+
+        // When the ViewModel is asked to complete the task
+        mTaskDetailViewModel.setCompleted(true);
+
+        // Then a request is sent to the task repository and the UI is updated
+        assertEquals("Task marked complete", mTaskDetailViewModel.getToastEvent().getValue());
+    }
+
+    @Test
+    public void activateTask() {
+        setupViewModelRepository();
+        when(mTasksRepository.activateTask(mTask)).thenReturn(Single.just("ok"));
+
+        // When the ViewModel is asked to complete the task
+        mTaskDetailViewModel.setCompleted(false);
+
+        // Then a request is sent to the task repository and the UI is updated
+        assertEquals("Task marked active", mTaskDetailViewModel.getToastEvent().getValue());
+    }
+
+    @Test
+    public void TaskDetailViewModel_repositoryError() {
+        when(mTasksRepository.getTask(mTask.getId())).thenReturn(Single.error(new RuntimeException()));
+
+        // Given an initialized ViewModel with an active task
+        mTaskDetailViewModel.start(mTask.getId());
+
+        // Then verify that data is not available
+        assertNotNull(mTaskDetailViewModel.getToastEvent().getValue());
+        assertFalse(mTaskDetailViewModel.isDataAvailable().getValue());
     }
 
 //    @Test
-//    public void completeTask() throws InterruptedException {
-//        setupViewModelRepositoryCallback();
-//
-//        // When the ViewModel is asked to complete the task
-//        mTaskDetailViewModel.setCompleted(true);
-//
-//        // Then a request is sent to the task repository and the UI is updated
-//        Event<Integer> value = LiveDataTestUtil.getValue(mTaskDetailViewModel.getSnackbarMessage());
-//        Assert.assertEquals(
-//                (long) value.getContentIfNotHandled(),
-//                R.string.task_marked_complete
-//        );
-//    }
-//
-//    @Test
-//    public void activateTask() throws InterruptedException {
-//        setupViewModelRepositoryCallback();
-//
-//        // When the ViewModel is asked to complete the task
-//        mTaskDetailViewModel.setCompleted(false);
-//
-//        // Then a request is sent to the task repository and the UI is updated
-//        Event<Integer> value = LiveDataTestUtil.getValue(mTaskDetailViewModel.getSnackbarMessage());
-//        Assert.assertEquals(
-//                (long) value.getContentIfNotHandled(),
-//                R.string.task_marked_active
-//        );
-//    }
-//
-//    @Test
-//    public void TaskDetailViewModel_repositoryError() throws InterruptedException {
-//        // Given an initialized ViewModel with an active task
-//        mTaskDetailViewModel.start(mTask.getId());
-//
-//        // Use a captor to get a reference for the callback.
-//        verify(mTasksRepository).getTask(eq(mTask.getId()), mGetTaskCallbackCaptor.capture());
-//
-//        // When the repository returns an error
-//        mGetTaskCallbackCaptor.getValue().onDataNotAvailable(); // Trigger callback error
-//
-//        // Then verify that data is not available
-//        assertFalse(LiveDataTestUtil.getValue(mTaskDetailViewModel.getIsDataAvailable()));
-//    }
-//
-//    @Test
-//    public void TaskDetailViewModel_repositoryNull() throws InterruptedException {
-//        setupViewModelRepositoryCallback();
+//    public void TaskDetailViewModel_repositoryNull() {
+//        setupViewModelRepository();
 //
 //        // When the repository returns a null task
 //        mGetTaskCallbackCaptor.getValue().onTaskLoaded(null); // Trigger callback error
@@ -170,6 +163,14 @@ public class TaskDetailViewModelTest {
 //        // Then task detail UI is shown
 //        assertThat(mTaskDetailViewModel.getTask().getValue(), is(nullValue()));
 //    }
+
+    @Test
+    public void clickOnFab_ShowsAddTaskUi() {
+        mTaskDetailViewModel.editTask();
+
+        // Then the event is triggered
+        assertNotNull(mTaskDetailViewModel.getEditTaskCommand().getValue());
+    }
 
     private void setupViewModelRepository() {
         when(mTasksRepository.getTask(mTask.getId())).thenReturn(Single.just(mTask));

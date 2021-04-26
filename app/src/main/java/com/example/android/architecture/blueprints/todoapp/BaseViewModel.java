@@ -45,7 +45,7 @@ public class BaseViewModel extends ViewModel {
     }
 
     protected <T> SingleTransformer<T, T> composeErrorToast() {
-        return upstream -> upstream.doOnSubscribe(disposable -> mToastEvent.setValue("doOnSubscribe"));
+        return upstream -> upstream.doOnError(throwable -> mToastEvent.setValue("error = " + throwable.getMessage()));
     }
 
     protected <T> SingleTransformer<T, T> composeDataLoading() {

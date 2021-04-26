@@ -108,7 +108,7 @@ public class TasksRepository {
             mTasksDao.updateCompleted(task.getId(), true);
             if (mCachedTasks != null) {
                 for (Task cacheTask : mCachedTasks) {
-                    if(task.getId().equals(cacheTask.getId())) {
+                    if (task.getId().equals(cacheTask.getId())) {
                         cacheTask.setCompleted(true);
                         break;
                     }
@@ -125,7 +125,7 @@ public class TasksRepository {
             mTasksDao.updateCompleted(taskId, true);
             if (mCachedTasks != null) {
                 for (Task cacheTask : mCachedTasks) {
-                    if(taskId.equals(cacheTask.getId())) {
+                    if (taskId.equals(cacheTask.getId())) {
                         cacheTask.setCompleted(true);
                         break;
                     }
@@ -142,7 +142,7 @@ public class TasksRepository {
             mTasksDao.updateCompleted(task.getId(), false);
             if (mCachedTasks != null) {
                 for (Task cacheTask : mCachedTasks) {
-                    if(task.getId().equals(cacheTask.getId())) {
+                    if (task.getId().equals(cacheTask.getId())) {
                         cacheTask.setCompleted(false);
                         break;
                     }
@@ -159,7 +159,7 @@ public class TasksRepository {
             mTasksDao.updateCompleted(taskId, false);
             if (mCachedTasks != null) {
                 for (Task cacheTask : mCachedTasks) {
-                    if(taskId.equals(cacheTask.getId())) {
+                    if (taskId.equals(cacheTask.getId())) {
                         cacheTask.setCompleted(true);
                         break;
                     }
@@ -176,9 +176,9 @@ public class TasksRepository {
             mTasksDao.deleteCompletedTasks();
             if (mCachedTasks != null) {
                 Iterator<Task> iterator = mCachedTasks.iterator();
-                for(;iterator.hasNext();) {
+                for (; iterator.hasNext(); ) {
                     Task next = iterator.next();
-                    if(next.isCompleted()) {
+                    if (next.isCompleted()) {
                         iterator.remove();
                     }
                 }
@@ -220,9 +220,9 @@ public class TasksRepository {
             mTasksDao.deleteTaskById(taskId);
             if (mCachedTasks != null) {
                 Iterator<Task> iterator = mCachedTasks.iterator();
-                for(;iterator.hasNext();) {
+                for (; iterator.hasNext(); ) {
                     Task next = iterator.next();
-                    if(taskId.equals(next.getId())) {
+                    if (taskId.equals(next.getId())) {
                         iterator.remove();
                         break;
                     }

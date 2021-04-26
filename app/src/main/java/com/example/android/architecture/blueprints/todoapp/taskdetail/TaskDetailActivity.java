@@ -20,6 +20,7 @@ import android.content.Intent;
 import android.os.Bundle;
 import android.view.Menu;
 import android.view.MenuItem;
+import android.view.View;
 import android.widget.CheckBox;
 
 import androidx.appcompat.app.ActionBar;
@@ -29,6 +30,7 @@ import com.example.android.architecture.blueprints.todoapp.BaseActivity;
 import com.example.android.architecture.blueprints.todoapp.R;
 import com.example.android.architecture.blueprints.todoapp.addedittask.AddEditTaskActivity;
 import com.example.android.architecture.blueprints.todoapp.databinding.TaskdetailActBinding;
+import com.google.android.material.floatingactionbutton.FloatingActionButton;
 
 import static com.example.android.architecture.blueprints.todoapp.addedittask.AddEditTaskActivity.ADD_EDIT_RESULT_OK;
 
@@ -61,6 +63,7 @@ public class TaskDetailActivity extends BaseActivity<TaskDetailViewModel, Taskde
         super.onCreate(savedInstanceState);
 
         setupToolbar();
+        setupFab();
         setupTaskDetailUserActionsListener();
         subscribeToNavigationChanges();
 
@@ -74,6 +77,11 @@ public class TaskDetailActivity extends BaseActivity<TaskDetailViewModel, Taskde
         ActionBar ab = getSupportActionBar();
         ab.setDisplayHomeAsUpEnabled(true);
         ab.setDisplayShowHomeEnabled(true);
+    }
+
+    private void setupFab() {
+        FloatingActionButton fab = findViewById(R.id.fab_edit_task);
+        fab.setOnClickListener(v -> mViewModel.editTask());
     }
 
     private void setupTaskDetailUserActionsListener() {

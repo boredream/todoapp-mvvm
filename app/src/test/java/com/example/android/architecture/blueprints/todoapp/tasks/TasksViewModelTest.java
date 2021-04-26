@@ -25,7 +25,6 @@ import com.example.android.architecture.blueprints.todoapp.addedittask.AddEditTa
 import com.example.android.architecture.blueprints.todoapp.data.Task;
 import com.example.android.architecture.blueprints.todoapp.data.source.TasksRepository;
 import com.example.android.architecture.blueprints.todoapp.taskdetail.TaskDetailActivity;
-import com.google.common.collect.Lists;
 
 import org.junit.Before;
 import org.junit.Rule;
@@ -73,8 +72,14 @@ public class TasksViewModelTest {
         mTasksViewModel = new TasksViewModel(mTasksRepository);
 
         // We initialise the tasks to 3, with one active and two completed
-        TASKS = Lists.newArrayList(new Task("Title1", "Description1"),
-                new Task("Title2", "Description2", true), new Task("Title3", "Description3", true));
+        TASKS = new ArrayList<>();
+        for (int i = 0; i < 3; i++) {
+            Task task = new Task();
+            task.setTitle("Title" + i);
+            task.setDescription("Description" + i);
+            task.setCompleted(i > 0);
+            TASKS.add(task);
+        }
     }
 
     @Test
@@ -82,7 +87,7 @@ public class TasksViewModelTest {
         mTasksViewModel.setFiltering(TasksFilterType.ALL_TASKS);
 
         when(mTasksRepository.getTasks()).thenReturn(Single.just(TASKS));
-        mTasksViewModel.loadTasks();
+        mTasksViewModel.loadTasks(true);
 
         // And data loaded
         assertFalse(mTasksViewModel.getItems().getValue().isEmpty());
@@ -94,7 +99,7 @@ public class TasksViewModelTest {
         mTasksViewModel.setFiltering(TasksFilterType.ACTIVE_TASKS);
 
         when(mTasksRepository.getTasks()).thenReturn(Single.just(TASKS));
-        mTasksViewModel.loadTasks();
+        mTasksViewModel.loadTasks(true);
 
         // And data loaded
         assertFalse(mTasksViewModel.getItems().getValue().isEmpty());
@@ -106,7 +111,7 @@ public class TasksViewModelTest {
         mTasksViewModel.setFiltering(TasksFilterType.COMPLETED_TASKS);
 
         when(mTasksRepository.getTasks()).thenReturn(Single.just(TASKS));
-        mTasksViewModel.loadTasks();
+        mTasksViewModel.loadTasks(true);
 
         // And data loaded
         assertFalse(mTasksViewModel.getItems().getValue().isEmpty());

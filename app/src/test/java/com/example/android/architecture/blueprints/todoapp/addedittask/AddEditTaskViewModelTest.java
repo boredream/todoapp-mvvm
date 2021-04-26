@@ -76,7 +76,10 @@ public class AddEditTaskViewModelTest {
     @Test
     public void populateTaskAndUpdate() {
         when(mTasksRepository.saveTask(any(Task.class))).thenReturn(Single.just("ok"));
-        Task testTask = new Task("TITLE", "DESCRIPTION", "1");
+        Task testTask = new Task();
+        testTask.setTitle("TITLE");
+        testTask.setDescription("DESCRIPTION");
+        testTask.setId("1");
 
         // When the ViewModel is asked to populate an existing task
         when(mTasksRepository.getTask(testTask.getId())).thenReturn(Single.just(testTask));

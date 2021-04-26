@@ -114,14 +114,13 @@ public class TasksViewModel extends BaseViewModel {
         }
     }
 
-    public void refreshFilterList() {
-        mItems.setValue(filterList(mItems.getValue()));
-    }
-
     public void clearCompletedTasks() {
-        mTasksRepository.clearCompletedTasks().subscribe();
-        mToastEvent.setValue("Completed tasks cleared");
-        loadTasks(false);
+        mTasksRepository.clearCompletedTasks()
+                .compose(composeCommon())
+                .subscribe((SimpleSingleObserver<String>) response -> {
+                    mToastEvent.setValue("Completed tasks cleared");
+                    loadTasks(false);
+                });
     }
 
     public void completeTask(Task task, boolean completed) {

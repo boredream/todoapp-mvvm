@@ -24,6 +24,8 @@ import androidx.appcompat.widget.Toolbar;
 import com.example.android.architecture.blueprints.todoapp.BaseActivity;
 import com.example.android.architecture.blueprints.todoapp.R;
 import com.example.android.architecture.blueprints.todoapp.databinding.AddtaskActBinding;
+import com.example.android.architecture.blueprints.todoapp.taskdetail.TaskDetailActivity;
+import com.example.android.architecture.blueprints.todoapp.tasks.TasksActivity;
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
 
 /**
@@ -34,7 +36,6 @@ public class AddEditTaskActivity extends BaseActivity<AddEditTaskViewModel, Addt
     public static final int REQUEST_CODE = 1;
 
     public static final int ADD_EDIT_RESULT_OK = RESULT_FIRST_USER + 1;
-    public static final String ARGUMENT_EDIT_TASK_ID = "taskId";
     private String taskId;
 
     @Override
@@ -57,14 +58,14 @@ public class AddEditTaskActivity extends BaseActivity<AddEditTaskViewModel, Addt
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
-        taskId = getIntent().getStringExtra(AddEditTaskActivity.ARGUMENT_EDIT_TASK_ID);
+        taskId = getIntent().getStringExtra(TaskDetailActivity.EXTRA_TASK_ID);
 
         setupToolbar();
         setupFab();
         setupActionBar();
         subscribeToNavigationChanges();
 
-        loadData();
+        mViewModel.start(taskId);
     }
 
     private void setupToolbar() {
@@ -92,10 +93,6 @@ public class AddEditTaskActivity extends BaseActivity<AddEditTaskViewModel, Addt
         } else {
             actionBar.setTitle(R.string.add_task);
         }
-    }
-
-    private void loadData() {
-        mViewModel.start(getIntent().getStringExtra(taskId));
     }
 
     private void subscribeToNavigationChanges() {
