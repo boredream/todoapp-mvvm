@@ -19,7 +19,6 @@ package com.example.android.architecture.blueprints.todoapp.taskdetail;
 import android.annotation.SuppressLint;
 
 import androidx.annotation.Nullable;
-import androidx.arch.core.util.Function;
 import androidx.lifecycle.LiveData;
 import androidx.lifecycle.MutableLiveData;
 import androidx.lifecycle.Transformations;
@@ -46,14 +45,7 @@ public class TaskDetailViewModel extends BaseViewModel {
     private final TasksRepository mTasksRepository;
 
     // This LiveData depends on another so we can use a transformation.
-    public final LiveData<Boolean> completed = Transformations.map(mTask,
-            new Function<Task, Boolean>() {
-                @Override
-                public Boolean apply(Task input) {
-                    return input.isCompleted();
-
-                }
-            });
+    public final LiveData<Boolean> completed = Transformations.map(mTask, Task::isCompleted);
 
     public TaskDetailViewModel(TasksRepository tasksRepository) {
         mTasksRepository = tasksRepository;
@@ -64,17 +56,18 @@ public class TaskDetailViewModel extends BaseViewModel {
             mTasksRepository.deleteTask(mTask.getValue().getId()).subscribe(new SingleObserver<String>() {
                 @Override
                 public void onSubscribe(Disposable d) {
-
+                    mDataLoading.setValue(true);
                 }
 
                 @Override
                 public void onSuccess(String s) {
+                    mDataLoading.setValue(false);
                     mDeleteTaskCommand.setValue(new Object());
                 }
 
                 @Override
                 public void onError(Throwable e) {
-
+                    mDataLoading.setValue(false);
                 }
             });
         }

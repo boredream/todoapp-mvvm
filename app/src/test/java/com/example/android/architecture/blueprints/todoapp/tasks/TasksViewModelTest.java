@@ -82,7 +82,7 @@ public class TasksViewModelTest {
         mTasksViewModel.setFiltering(TasksFilterType.ALL_TASKS);
 
         when(mTasksRepository.getTasks()).thenReturn(Single.just(TASKS));
-        mTasksViewModel.loadTasks(true);
+        mTasksViewModel.loadTasks();
 
         // And data loaded
         assertFalse(mTasksViewModel.getItems().getValue().isEmpty());
@@ -94,7 +94,7 @@ public class TasksViewModelTest {
         mTasksViewModel.setFiltering(TasksFilterType.ACTIVE_TASKS);
 
         when(mTasksRepository.getTasks()).thenReturn(Single.just(TASKS));
-        mTasksViewModel.loadTasks(true);
+        mTasksViewModel.loadTasks();
 
         // And data loaded
         assertFalse(mTasksViewModel.getItems().getValue().isEmpty());
@@ -106,7 +106,7 @@ public class TasksViewModelTest {
         mTasksViewModel.setFiltering(TasksFilterType.COMPLETED_TASKS);
 
         when(mTasksRepository.getTasks()).thenReturn(Single.just(TASKS));
-        mTasksViewModel.loadTasks(true);
+        mTasksViewModel.loadTasks();
 
         // And data loaded
         assertFalse(mTasksViewModel.getItems().getValue().isEmpty());
@@ -137,6 +137,7 @@ public class TasksViewModelTest {
     @Test
     public void handleActivityResult_editOK() {
         // When TaskDetailActivity sends a EDIT_RESULT_OK
+        when(mTasksRepository.getTasks()).thenReturn(Single.just(TASKS));
         mTasksViewModel.handleActivityResult(AddEditTaskActivity.REQUEST_CODE, TaskDetailActivity.EDIT_RESULT_OK);
         assertEquals("TO-DO saved", mTasksViewModel.getToastEvent().getValue());
     }
@@ -144,6 +145,7 @@ public class TasksViewModelTest {
     @Test
     public void handleActivityResult_addEditOK() {
         // When TaskDetailActivity sends a EDIT_RESULT_OK
+        when(mTasksRepository.getTasks()).thenReturn(Single.just(TASKS));
         mTasksViewModel.handleActivityResult(AddEditTaskActivity.REQUEST_CODE, AddEditTaskActivity.ADD_EDIT_RESULT_OK);
         assertEquals("TO-DO added", mTasksViewModel.getToastEvent().getValue());
     }
@@ -151,6 +153,7 @@ public class TasksViewModelTest {
     @Test
     public void handleActivityResult_deleteOk() {
         // When TaskDetailActivity sends a DELETE_RESULT_OK
+        when(mTasksRepository.getTasks()).thenReturn(Single.just(TASKS));
         mTasksViewModel.handleActivityResult(AddEditTaskActivity.REQUEST_CODE, TaskDetailActivity.DELETE_RESULT_OK);
         assertEquals("Task was deleted", mTasksViewModel.getToastEvent().getValue());
     }

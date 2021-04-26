@@ -59,7 +59,6 @@ public class AddEditTaskActivity extends BaseActivity<AddEditTaskViewModel, Addt
 
         taskId = getIntent().getStringExtra(AddEditTaskActivity.ARGUMENT_EDIT_TASK_ID);
 
-        setupProgressDialog();
         setupToolbar();
         setupFab();
         setupActionBar();

@@ -26,7 +26,6 @@ import java.util.List;
 import java.util.concurrent.TimeUnit;
 
 import io.reactivex.Single;
-import io.reactivex.SingleEmitter;
 import io.reactivex.SingleOnSubscribe;
 import io.reactivex.SingleTransformer;
 import io.reactivex.android.schedulers.AndroidSchedulers;
@@ -37,7 +36,7 @@ import io.reactivex.schedulers.Schedulers;
  */
 public class TasksRepository {
 
-    private static final int SERVICE_LATENCY_IN_MILLIS = 2000;
+    private static final int SERVICE_LATENCY_IN_MILLIS = 1000;
     private TasksDao mTasksDao;
 
     private volatile static TasksRepository INSTANCE = null;
@@ -139,11 +138,6 @@ public class TasksRepository {
         }).compose(getSingleTransformer());
     }
 
-    public void refreshTasks() {
-//        mCacheIsDirty = true;
-        // TODO: chunyang 4/23/21
-    }
-
     public Single<String> deleteAllTasks() {
         EspressoIdlingResource.increment(); // App is busy until further notice
         return Single.create((SingleOnSubscribe<String>) emitter -> {
@@ -155,13 +149,10 @@ public class TasksRepository {
 
     public Single<String> deleteTask(@NonNull final String taskId) {
         EspressoIdlingResource.increment(); // App is busy until further notice
-        return Single.create(new SingleOnSubscribe<String>() {
-            @Override
-            public void subscribe(SingleEmitter<String> emitter) throws Exception {
-                EspressoIdlingResource.decrement(); // Set app as idle.
-                mTasksDao.deleteTaskById(taskId);
-                emitter.onSuccess("ok");
-            }
+        return Single.create((SingleOnSubscribe<String>) emitter -> {
+            EspressoIdlingResource.decrement(); // Set app as idle.
+            mTasksDao.deleteTaskById(taskId);
+            emitter.onSuccess("ok");
         }).compose(getSingleTransformer());
     }
 }

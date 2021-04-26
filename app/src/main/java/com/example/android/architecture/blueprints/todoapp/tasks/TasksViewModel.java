@@ -175,15 +175,17 @@ public class TasksViewModel extends BaseViewModel {
             switch (resultCode) {
                 case TaskDetailActivity.EDIT_RESULT_OK:
                     mToastEvent.setValue("TO-DO saved");
+                    loadTasks();
                     break;
                 case AddEditTaskActivity.ADD_EDIT_RESULT_OK:
                     mToastEvent.setValue("TO-DO added");
+                    loadTasks();
                     break;
                 case TaskDetailActivity.DELETE_RESULT_OK:
                     mToastEvent.setValue("Task was deleted");
+                    loadTasks();
                     break;
             }
-            loadTasks();
         }
     }
 

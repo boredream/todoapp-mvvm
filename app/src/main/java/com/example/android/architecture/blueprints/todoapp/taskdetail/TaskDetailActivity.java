@@ -60,7 +60,6 @@ public class TaskDetailActivity extends BaseActivity<TaskDetailViewModel, Taskde
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
-        setupProgressDialog();
         setupToolbar();
         setupTaskDetailUserActionsListener();
         subscribeToNavigationChanges();
