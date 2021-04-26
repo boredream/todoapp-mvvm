@@ -63,7 +63,7 @@ public class AddEditTaskViewModelTest {
 
     @Test
     public void saveNewTask() {
-        when(mTasksRepository.saveTask(any(Task.class))).thenReturn(Single.just("ok"));
+        when(mTasksRepository.saveTask(any(Task.class), true)).thenReturn(Single.just("ok"));
 
         mAddEditTaskViewModel.start(null);
         mAddEditTaskViewModel.description.setValue("Some Task Description");
@@ -75,7 +75,7 @@ public class AddEditTaskViewModelTest {
 
     @Test
     public void populateTaskAndUpdate() {
-        when(mTasksRepository.saveTask(any(Task.class))).thenReturn(Single.just("ok"));
+        when(mTasksRepository.saveTask(any(Task.class), false)).thenReturn(Single.just("ok"));
         Task testTask = new Task();
         testTask.setTitle("TITLE");
         testTask.setDescription("DESCRIPTION");

@@ -34,8 +34,6 @@ import com.example.android.architecture.blueprints.todoapp.taskdetail.TaskDetail
 import java.util.ArrayList;
 import java.util.List;
 
-import io.reactivex.functions.Function;
-
 
 /**
  * Exposes the data to be used in the task list screen.
@@ -61,8 +59,6 @@ public class TasksViewModel extends BaseViewModel {
     private final TasksRepository mTasksRepository;
 
     // Not used at the moment
-    private final MutableLiveData<Boolean> mIsDataLoadingError = new MutableLiveData<>();
-
     private final SingleLiveEvent<String> mOpenTaskEvent = new SingleLiveEvent<>();
 
     private final SingleLiveEvent<Object> mNewTaskEvent = new SingleLiveEvent<>();
@@ -177,7 +173,7 @@ public class TasksViewModel extends BaseViewModel {
             switch (resultCode) {
                 case TaskDetailActivity.EDIT_RESULT_OK:
                     mToastEvent.setValue("TO-DO saved");
-                    loadTasks(true);
+                    loadTasks(false);
                     break;
                 case AddEditTaskActivity.ADD_EDIT_RESULT_OK:
                     mToastEvent.setValue("TO-DO added");
@@ -185,7 +181,7 @@ public class TasksViewModel extends BaseViewModel {
                     break;
                 case TaskDetailActivity.DELETE_RESULT_OK:
                     mToastEvent.setValue("Task was deleted");
-                    loadTasks(true);
+                    loadTasks(false);
                     break;
             }
         }
@@ -197,7 +193,7 @@ public class TasksViewModel extends BaseViewModel {
         }
 
         mTasksRepository.getTasks()
-                .map((Function<List<Task>, List<Task>>) this::filterList)
+                .map(this::filterList)
                 .compose(composeCommon())
                 .subscribe((SimpleSingleObserver<List<Task>>) mItems::setValue);
     }

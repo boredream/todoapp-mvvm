@@ -89,15 +89,24 @@ public class TasksRepository {
         }).compose(getSingleTransformer());
     }
 
-    public Single<String> saveTask(@NonNull final Task task) {
+    public Single<String> saveTask(@NonNull final Task task, boolean isNewTask) {
         // 新增后服务器一般会setId等操作，所以数据直接加入缓存有问题，应该重新拉取数据
         // 不过，如果新增接口的response是服务器处理后的数据，则可以加入到缓存里，无需再次请求
 
         EspressoIdlingResource.increment(); // App is busy until further notice
         return Single.create((SingleOnSubscribe<String>) emitter -> {
-            EspressoIdlingResource.decrement(); // Set app as idle.
             mTasksDao.insertTask(task);
+            if (!isNewTask && mCachedTasks != null) {
+                for (Task cacheTask : mCachedTasks) {
+                    if (task.getId().equals(cacheTask.getId())) {
+                        cacheTask.setTitle(task.getTitle());
+                        cacheTask.setDescription(task.getDescription());
+                        break;
+                    }
+                }
+            }
             emitter.onSuccess("ok");
+            EspressoIdlingResource.decrement(); // Set app as idle.
         }).compose(getSingleTransformer());
     }
 

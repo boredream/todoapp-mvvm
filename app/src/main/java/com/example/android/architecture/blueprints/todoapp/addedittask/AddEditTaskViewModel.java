@@ -101,7 +101,7 @@ public class AddEditTaskViewModel extends BaseViewModel {
             task.setId(UUID.randomUUID().toString());
         }
 
-        mTasksRepository.saveTask(task).compose(composeCommon())
+        mTasksRepository.saveTask(task, mIsNewTask).compose(composeCommon())
                 .subscribe((SimpleSingleObserver<String>) s -> mTaskUpdatedEvent.setValue(mIsNewTask));
     }
 

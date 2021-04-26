@@ -34,6 +34,7 @@ import com.example.android.architecture.blueprints.todoapp.TestUtils;
 import com.example.android.architecture.blueprints.todoapp.data.FakeTasksRemoteDataSource;
 import com.example.android.architecture.blueprints.todoapp.data.Task;
 import com.example.android.architecture.blueprints.todoapp.data.source.TasksRepository;
+import com.example.android.architecture.blueprints.todoapp.taskdetail.TaskDetailActivity;
 import com.example.android.architecture.blueprints.todoapp.util.EspressoIdlingResource;
 
 import org.hamcrest.Description;
@@ -130,9 +131,12 @@ public class AddEditTaskScreenTest {
             @Override
             public void run() {
                 TasksRepository.destroyInstance();
-                FakeTasksRemoteDataSource.getInstance().addTasks(
-                        new Task("AddTitle", "", TASK_ID, false)
-                );
+                Task task = new Task();
+                task.setTitle("AddTitle");
+                task.setDescription("");
+                task.setId(TASK_ID);
+                task.setCompleted(false);
+                FakeTasksRemoteDataSource.getInstance().addTasks(task);
             }
         });
         launchNewTaskActivity(TASK_ID);
@@ -154,7 +158,7 @@ public class AddEditTaskScreenTest {
         Intent intent = new Intent(ApplicationProvider.getApplicationContext(),
                 AddEditTaskActivity.class);
 
-        intent.putExtra(AddEditTaskFragment.ARGUMENT_EDIT_TASK_ID, taskId);
+        intent.putExtra(TaskDetailActivity.EXTRA_TASK_ID, taskId);
         mActivityTestRule.launchActivity(intent);
     }
 

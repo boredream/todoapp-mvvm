@@ -92,7 +92,7 @@ public class TasksScreenTest {
     public void resetState() {
         ViewModelFactory.destroyInstance();
         Injection.provideTasksRepository(ApplicationProvider.getApplicationContext())
-                .deleteAllTasks();
+                .deleteAllTasks().subscribe();
     }
 
     /**
@@ -156,6 +156,14 @@ public class TasksScreenTest {
         // First add a task
         createTask(TITLE1, DESCRIPTION);
 
+        // TODO: chunyang 4/26/21
+        // createTask 后释放资源，代码继续向下，但主页此时在请求数据中
+        try {
+            Thread.sleep(1500);
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
+
         // Click on the task on the list
         onView(withText(TITLE1)).perform(click());
 
@@ -173,6 +181,12 @@ public class TasksScreenTest {
 
         // Save the task
         onView(withId(R.id.fab_edit_task_done)).perform(click());
+
+        try {
+            Thread.sleep(200);
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
 
         // Verify task is displayed on screen in the task list.
         onView(withItemText(editTaskTitle)).check(matches(isDisplayed()));

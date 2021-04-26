@@ -16,6 +16,10 @@
 
 package com.example.android.architecture.blueprints.todoapp.data.source.local;
 
+import androidx.room.Room;
+import androidx.test.core.app.ApplicationProvider;
+import androidx.test.runner.AndroidJUnit4;
+
 import com.example.android.architecture.blueprints.todoapp.data.Task;
 
 import org.junit.After;
@@ -25,10 +29,6 @@ import org.junit.runner.RunWith;
 
 import java.util.List;
 
-import androidx.room.Room;
-import androidx.test.core.app.ApplicationProvider;
-import androidx.test.runner.AndroidJUnit4;
-
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.CoreMatchers.notNullValue;
 import static org.hamcrest.MatcherAssert.assertThat;
@@ -36,12 +36,20 @@ import static org.hamcrest.MatcherAssert.assertThat;
 @RunWith(AndroidJUnit4.class)
 public class TasksDaoTest {
 
-    private static final Task TASK = new Task("title", "description", "id", true);
+    private static Task TASK;
+
+    static {
+        TASK = new Task();
+        TASK.setTitle("title");
+        TASK.setDescription("description");
+        TASK.setId("id");
+        TASK.setCompleted(true);
+    }
 
     private ToDoDatabase mDatabase;
 
     @Before
-    public void initDb() {
+    public void init() {
         // using an in-memory database because the information stored here disappears when the
         // process is killed
         mDatabase = Room.inMemoryDatabaseBuilder(ApplicationProvider.getApplicationContext(),
@@ -71,7 +79,11 @@ public class TasksDaoTest {
         mDatabase.taskDao().insertTask(TASK);
 
         // When a task with the same id is inserted
-        Task newTask = new Task("title2", "description2", "id", true);
+        Task newTask = new Task();
+        newTask.setTitle("title2");
+        newTask.setDescription("description2");
+        newTask.setId("id");
+        newTask.setCompleted(true);
         mDatabase.taskDao().insertTask(newTask);
         // When getting the task by id from the database
         Task loaded = mDatabase.taskDao().getTaskById(TASK.getId());
@@ -100,7 +112,11 @@ public class TasksDaoTest {
         mDatabase.taskDao().insertTask(TASK);
 
         // When the task is updated
-        Task updatedTask = new Task("title2", "description2", "id", true);
+        Task updatedTask = new Task();
+        updatedTask.setTitle("title2");
+        updatedTask.setDescription("description2");
+        updatedTask.setId("id");
+        updatedTask.setCompleted(true);
         mDatabase.taskDao().updateTask(updatedTask);
 
         // When getting the task by id from the database
@@ -168,7 +184,7 @@ public class TasksDaoTest {
     }
 
     private void assertTask(Task task, String id, String title,
-            String description, boolean completed) {
+                            String description, boolean completed) {
         assertThat(task, notNullValue());
         assertThat(task.getId(), is(id));
         assertThat(task.getTitle(), is(title));
