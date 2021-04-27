@@ -83,8 +83,8 @@ public class TasksRepository {
 
         EspressoIdlingResource.increment(); // App is busy until further notice
         return Single.create((SingleOnSubscribe<List<Task>>) emitter -> {
-            EspressoIdlingResource.decrement(); // Set app as idle.
             refreshCache(mTasksDao.getTasks());
+            EspressoIdlingResource.decrement(); // Set app as idle.
             emitter.onSuccess(mCachedTasks);
         }).compose(getSingleTransformer());
     }
@@ -105,15 +105,14 @@ public class TasksRepository {
                     }
                 }
             }
-            emitter.onSuccess("ok");
             EspressoIdlingResource.decrement(); // Set app as idle.
+            emitter.onSuccess("ok");
         }).compose(getSingleTransformer());
     }
 
     public Single<String> completeTask(@NonNull final Task task) {
         EspressoIdlingResource.increment(); // App is busy until further notice
         return Single.create((SingleOnSubscribe<String>) emitter -> {
-            EspressoIdlingResource.decrement(); // Set app as idle.
             mTasksDao.updateCompleted(task.getId(), true);
             if (mCachedTasks != null) {
                 for (Task cacheTask : mCachedTasks) {
@@ -123,6 +122,7 @@ public class TasksRepository {
                     }
                 }
             }
+            EspressoIdlingResource.decrement(); // Set app as idle.
             emitter.onSuccess("ok");
         }).compose(getSingleTransformer());
     }
@@ -130,7 +130,6 @@ public class TasksRepository {
     public Single<String> completeTask(@NonNull final String taskId) {
         EspressoIdlingResource.increment(); // App is busy until further notice
         return Single.create((SingleOnSubscribe<String>) emitter -> {
-            EspressoIdlingResource.decrement(); // Set app as idle.
             mTasksDao.updateCompleted(taskId, true);
             if (mCachedTasks != null) {
                 for (Task cacheTask : mCachedTasks) {
@@ -140,6 +139,7 @@ public class TasksRepository {
                     }
                 }
             }
+            EspressoIdlingResource.decrement(); // Set app as idle.
             emitter.onSuccess("ok");
         }).compose(getSingleTransformer());
     }
@@ -147,7 +147,6 @@ public class TasksRepository {
     public Single<String> activateTask(@NonNull final Task task) {
         EspressoIdlingResource.increment(); // App is busy until further notice
         return Single.create((SingleOnSubscribe<String>) emitter -> {
-            EspressoIdlingResource.decrement(); // Set app as idle.
             mTasksDao.updateCompleted(task.getId(), false);
             if (mCachedTasks != null) {
                 for (Task cacheTask : mCachedTasks) {
@@ -157,6 +156,7 @@ public class TasksRepository {
                     }
                 }
             }
+            EspressoIdlingResource.decrement(); // Set app as idle.
             emitter.onSuccess("ok");
         }).compose(getSingleTransformer());
     }
@@ -164,7 +164,6 @@ public class TasksRepository {
     public Single<String> activateTask(@NonNull final String taskId) {
         EspressoIdlingResource.increment(); // App is busy until further notice
         return Single.create((SingleOnSubscribe<String>) emitter -> {
-            EspressoIdlingResource.decrement(); // Set app as idle.
             mTasksDao.updateCompleted(taskId, false);
             if (mCachedTasks != null) {
                 for (Task cacheTask : mCachedTasks) {
@@ -174,6 +173,7 @@ public class TasksRepository {
                     }
                 }
             }
+            EspressoIdlingResource.decrement(); // Set app as idle.
             emitter.onSuccess("ok");
         }).compose(getSingleTransformer());
     }
@@ -181,7 +181,6 @@ public class TasksRepository {
     public Single<String> clearCompletedTasks() {
         EspressoIdlingResource.increment(); // App is busy until further notice
         return Single.create((SingleOnSubscribe<String>) emitter -> {
-            EspressoIdlingResource.decrement(); // Set app as idle.
             mTasksDao.deleteCompletedTasks();
             if (mCachedTasks != null) {
                 Iterator<Task> iterator = mCachedTasks.iterator();
@@ -192,6 +191,7 @@ public class TasksRepository {
                     }
                 }
             }
+            EspressoIdlingResource.decrement(); // Set app as idle.
             emitter.onSuccess("ok");
         }).compose(getSingleTransformer());
     }
@@ -215,9 +215,9 @@ public class TasksRepository {
     public Single<String> deleteAllTasks() {
         EspressoIdlingResource.increment(); // App is busy until further notice
         return Single.create((SingleOnSubscribe<String>) emitter -> {
-            EspressoIdlingResource.decrement(); // Set app as idle.
             mTasksDao.deleteTasks();
             refreshCache(new ArrayList<>());
+            EspressoIdlingResource.decrement(); // Set app as idle.
             emitter.onSuccess("ok");
         }).compose(getSingleTransformer());
     }
@@ -225,7 +225,6 @@ public class TasksRepository {
     public Single<String> deleteTask(@NonNull final String taskId) {
         EspressoIdlingResource.increment(); // App is busy until further notice
         return Single.create((SingleOnSubscribe<String>) emitter -> {
-            EspressoIdlingResource.decrement(); // Set app as idle.
             mTasksDao.deleteTaskById(taskId);
             if (mCachedTasks != null) {
                 Iterator<Task> iterator = mCachedTasks.iterator();
@@ -237,6 +236,7 @@ public class TasksRepository {
                     }
                 }
             }
+            EspressoIdlingResource.decrement(); // Set app as idle.
             emitter.onSuccess("ok");
         }).compose(getSingleTransformer());
     }
